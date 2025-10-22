@@ -1,0 +1,12 @@
+John Doe
+john.doe@company.com
+john@personal.com
+COMPANY_ORG
+PERSONAL_ORG
+john-doe
+johndoe
+3
+portal
+1
+y
+y

@@ -1,0 +1,14 @@
+# Main zsh configuration
+# Source all configuration files
+source ~/.config/zsh/paths/paths.zsh
+source ~/.config/zsh/aliases/aliases.zsh
+source ~/.config/zsh/functions/functions.zsh
+
+# Load context-specific configurations
+if [ -f ~/.config/zsh/contexts/current.zsh ]; then
+    source ~/.config/zsh/contexts/current.zsh
+fi
+
+# VPN aliases
+[[ -f "$HOME/.config/zsh/aliases/vpn-aliases.zsh" ]] && source "$HOME/.config/zsh/aliases/vpn-aliases.zsh"
+

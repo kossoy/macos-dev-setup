@@ -1,0 +1,35 @@
+# Sensitive files - never commit
+config/zsh/private/api-keys.zsh
+scripts/vault-backup.sh
+scripts/setup-nas-keychain.sh
+scripts/mount-nas-*.sh
+
+# User-specific files
+config/zsh/contexts/current.zsh
+
+# Obsidian workspace files (device-specific)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/workspace.json.bak
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Trash
+.Trash-*
+
+# Backups
+*.tar.gz
+*.bak
+backups/
+
