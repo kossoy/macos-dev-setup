@@ -2,7 +2,7 @@
 # =============================================================================
 # macOS Fresh Setup - One-Liner Installer
 # =============================================================================
-# Usage: bash <(curl -fsSL https://raw.githubusercontent.com/username/macos-fresh-setup/main/install.sh)
+# Usage: bash <(curl -fsSL https://raw.githubusercontent.com/kossoy/macos-dev-setup/main/install.sh)
 # =============================================================================
 
 set -e
@@ -139,8 +139,8 @@ ensure_git() {
 
 # Clone or update repository
 setup_repository() {
-    local repo_url="https://github.com/username/macos-fresh-setup.git"
-    local install_dir="$HOME/macos-fresh-setup"
+    local repo_url="https://github.com/kossoy/macos-dev-setup.git"
+    local install_dir="$HOME/macos-dev-setup"
 
     print_status "Setting up repository at $install_dir"
 
@@ -184,8 +184,8 @@ run_simple_bootstrap() {
     print_header "========================================"
     echo ""
 
-    if [[ -f "$HOME/macos-fresh-setup/simple-bootstrap.sh" ]]; then
-        bash "$HOME/macos-fresh-setup/simple-bootstrap.sh"
+    if [[ -f "$HOME/macos-dev-setup/simple-bootstrap.sh" ]]; then
+        bash "$HOME/macos-dev-setup/simple-bootstrap.sh"
     else
         print_error "simple-bootstrap.sh not found"
         exit 1
@@ -211,7 +211,7 @@ offer_full_bootstrap() {
     print_status "For advanced configuration (Git, SSH, GitHub CLI, context switching),"
     print_status "you can run the full bootstrap:"
     echo ""
-    echo "  cd ~/macos-fresh-setup"
+    echo "  cd ~/macos-dev-setup"
     echo "  ./bootstrap.sh"
     echo ""
 
@@ -228,7 +228,7 @@ offer_full_bootstrap() {
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_status "Starting full bootstrap..."
-        cd "$HOME/macos-fresh-setup"
+        cd "$HOME/macos-dev-setup"
         ./bootstrap.sh
     else
         print_success "Setup complete! Reload your shell to use the new configuration:"
