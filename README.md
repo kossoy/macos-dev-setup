@@ -1,45 +1,79 @@
 # macOS Fresh Setup Package
 
-🚀 **Semi-automated development environment setup for M1 Mac (macOS Tahoe 26.0.1)**
+🚀 **Semi-automated development environment setup for M1 Mac (macOS Sequoia 15.x / Tahoe 26.x)**
 
 ## Quick Start
 
-### 1. Clone & Run
+### ⚡ One-Liner Installation (Recommended)
+
 ```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/username/macos-fresh-setup/main/install.sh)
+```
+
+This single command will:
+1. ✅ Validate your macOS system compatibility
+2. ✅ Install Xcode Command Line Tools (if needed)
+3. ✅ Clone this repository to `~/macos-fresh-setup`
+4. ✅ Run simple-bootstrap.sh automatically
+5. ✅ Offer to run full bootstrap.sh for advanced setup
+
+### 🔧 Manual Installation
+
+If you prefer manual control:
+
+```bash
+# Clone the repository
 git clone https://github.com/username/macos-fresh-setup.git
 cd macos-fresh-setup
-chmod +x bootstrap.sh
+
+# Option 1: Simple Bootstrap (non-interactive, sensible defaults)
+./simple-bootstrap.sh
+
+# Option 2: Full Bootstrap (interactive, full customization)
 ./bootstrap.sh
 ```
 
-### Optional Setup Scripts
+### 📦 Optional Development Environments
 
-After running the main bootstrap, you can install additional development environments:
+After basic setup, install additional tools as needed:
 
 ```bash
-# Python with AI capabilities
-./setup-python-ai.sh
+# Docker Desktop
+./setup-helpers/04-install-docker.sh
+
+# Python environment (pyenv + Python)
+./setup-helpers/05-install-python.sh         # Standard mode
+./setup-helpers/05-install-python.sh --mode=ai-ml  # With AI/ML packages
+
+# Node.js environment (Volta + Node)
+./setup-helpers/06-install-nodejs.sh         # Standard mode
+./setup-helpers/06-install-nodejs.sh --mode=full   # With global packages
+
+# Docker-based databases (PostgreSQL, MySQL, MongoDB, Redis)
+./setup-helpers/07-setup-databases.sh
+
+# AI/ML tools (Ollama, MLflow, Jupyter)
+./setup-helpers/09-install-ai-ml-tools.sh
+
+# Git, SSH, and GitHub CLI configuration
+./setup-helpers/03-git-and-ssh-setup.sh
 ```
 
-### 2. Follow Prompts
-- Enter your name and email addresses
-- Choose work/personal context names
-- Select browser preferences
-- Pick installation mode (Full/Minimal/Custom)
+### 🔑 Configure API Keys
 
-### 3. Restore API Keys
 ```bash
-# Copy your API keys to:
+# Edit your API keys file
 ~/.config/zsh/private/api-keys.zsh
 
-# Set permissions:
+# Set proper permissions
 chmod 600 ~/.config/zsh/private/api-keys.zsh
 ```
 
-### 4. Reload Shell
+### 🔄 Reload Shell
+
 ```bash
 source ~/.zshrc
-# or restart terminal
+# or restart your terminal
 ```
 
 ## What You Get

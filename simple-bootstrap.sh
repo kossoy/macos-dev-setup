@@ -1,101 +1,188 @@
 #!/bin/bash
-# Simple macOS Fresh Setup - Just copy working files
-# No overcomplicated package structure, no templates, just works
+# =============================================================================
+# macOS Fresh Setup - Simple Bootstrap
+# =============================================================================
+# Non-interactive automated setup with sensible defaults
+# =============================================================================
 
 set -e
 
-echo "🍎 Simple macOS Fresh Setup"
-echo "=========================="
-echo ""
-
-# Check if running on macOS
-if [[ "$(uname -s)" != "Darwin" ]]; then
-    echo "❌ This script is for macOS only"
-    exit 1
-fi
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "📦 Installing Homebrew..."
-if ! command -v brew >/dev/null 2>&1; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
+# Print functions
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
 
-echo "📦 Installing essential packages..."
-brew install git wget curl tree jq bat fd ripgrep eza
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
 
-echo "🐚 Installing Oh My Zsh..."
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-fi
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
 
-echo "🔌 Installing Oh My Zsh plugins..."
-if [ ! -d "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions" ]; then
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-fi
-if [ ! -d "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting" ]; then
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-fi
-if [ ! -d "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k
-fi
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
 
-echo "📁 Creating zsh config directory..."
-mkdir -p ~/.zsh/{config,private}
+print_header() {
+    echo -e "${PURPLE}$1${NC}"
+}
 
-echo "📋 Copying your working configuration..."
-# Copy your actual working files
-cp "$SCRIPT_DIR/config/zsh/config/aliases.zsh" ~/.zsh/config/aliases.zsh
-cp "$SCRIPT_DIR/config/zsh/config/functions.zsh" ~/.zsh/config/functions.zsh  
-cp "$SCRIPT_DIR/config/zsh/config/paths.zsh" ~/.zsh/config/paths.zsh
-cp "$SCRIPT_DIR/config/zsh/config/tools.zsh" ~/.zsh/config/tools.zsh
+print_step() {
+    echo -e "${CYAN}[$1/$2]${NC} $3"
+}
 
-# Create simple .zshrc that sources your files
-cat > ~/.zshrc << 'EOF'
-# Enable Powerlevel10k instant prompt
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
+# Check if running on macOS
+check_macos() {
+    if [[ "$(uname -s)" != "Darwin" ]]; then
+        print_error "This script is for macOS only"
+        exit 1
+    fi
+}
 
-# Oh My Zsh
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="powerlevel10k/powerlevel10k"
-plugins=(git brew macos zsh-autosuggestions zsh-syntax-highlighting virtualenv pip python docker)
-source $ZSH/oh-my-zsh.sh
+# Main execution
+main() {
+    local total_steps=7
 
-# Your custom config
-ZSH_CONFIG_DIR="$HOME/.zsh/config"
-source "$ZSH_CONFIG_DIR/paths.zsh"
-source "$ZSH_CONFIG_DIR/aliases.zsh" 
-source "$ZSH_CONFIG_DIR/functions.zsh"
-source "$ZSH_CONFIG_DIR/tools.zsh"
+    print_header "🍎 macOS Fresh Setup - Simple Bootstrap"
+    print_header "========================================"
+    echo ""
+    print_status "This script will set up your development environment with sensible defaults"
+    print_status "No interactive prompts - everything is automated"
+    echo ""
 
-# Load context if exists
-if [ -f "$HOME/.zsh/private/current.zsh" ]; then
-    source "$HOME/.zsh/private/current.zsh"
-fi
+    # Check macOS
+    check_macos
+
+    # Step 1: Install Homebrew
+    print_step 1 $total_steps "Installing Homebrew..."
+    if command -v brew &>/dev/null; then
+        print_success "Homebrew already installed"
+    else
+        bash "$SCRIPT_DIR/setup-helpers/01-install-homebrew.sh" --non-interactive || {
+            print_error "Failed to install Homebrew"
+            exit 1
+        }
+    fi
+    echo ""
+
+    # Step 2: Install Oh My Zsh
+    print_step 2 $total_steps "Installing Oh My Zsh + plugins..."
+    if [[ -d "$HOME/.oh-my-zsh" ]]; then
+        print_success "Oh My Zsh already installed"
+    else
+        bash "$SCRIPT_DIR/setup-helpers/02-install-oh-my-zsh.sh" --non-interactive || {
+            print_error "Failed to install Oh My Zsh"
+            exit 1
+        }
+    fi
+    echo ""
+
+    # Step 3: Deploy shell configuration
+    print_step 3 $total_steps "Deploying shell configuration..."
+    bash "$SCRIPT_DIR/setup-helpers/03-setup-shell.sh" --non-interactive || {
+        print_error "Failed to deploy shell configuration"
+        exit 1
+    }
+    echo ""
+
+    # Step 4: Create work directory structure
+    print_step 4 $total_steps "Creating work directory structure..."
+    mkdir -p ~/work/{databases,tools,projects/{work,personal},configs/{work,personal},scripts,docs,bin}
+    print_success "Work directory structure created"
+    echo ""
+
+    # Step 5: Install utility scripts
+    print_step 5 $total_steps "Installing utility scripts..."
+    if [[ -d "$SCRIPT_DIR/scripts" ]]; then
+        cp "$SCRIPT_DIR/scripts/"*.sh ~/work/scripts/ 2>/dev/null || true
+        cp "$SCRIPT_DIR/scripts/"*.zsh ~/work/scripts/ 2>/dev/null || true
+        chmod +x ~/work/scripts/*.sh ~/work/scripts/*.zsh 2>/dev/null || true
+        print_success "Utility scripts installed"
+    else
+        print_warning "Scripts directory not found, skipping"
+    fi
+    echo ""
+
+    # Step 6: Set up basic context (default)
+    print_step 6 $total_steps "Setting up default context..."
+    mkdir -p ~/.config/zsh/contexts ~/.config/zsh/private
+
+    # Create default context file
+    if [[ ! -f "$HOME/.config/zsh/contexts/current.zsh" ]]; then
+        cat > "$HOME/.config/zsh/contexts/current.zsh" << 'EOF'
+# Default context (update via 'work' or 'personal' commands)
+export WORK_CONTEXT="default"
+export PROJECT_ROOT="$HOME/work/projects"
 EOF
+        print_success "Default context created"
+    else
+        print_success "Context already configured"
+    fi
+    echo ""
 
-echo "🎨 Copying Powerlevel10k config..."
-cp "$SCRIPT_DIR/config/p10k.zsh" ~/.p10k.zsh
+    # Step 7: Final setup
+    print_step 7 $total_steps "Finalizing setup..."
 
-echo "📁 Creating work directory..."
-mkdir -p ~/work/{databases,tools,projects/{work,personal},configs/{work,personal},scripts,docs,bin}
+    # Ensure ~/.zshrc exists and sources our config
+    if [[ ! -f "$HOME/.zshrc" ]] || ! grep -q "\.config/zsh" "$HOME/.zshrc"; then
+        print_status "Updating ~/.zshrc to source configuration..."
+        bash "$SCRIPT_DIR/setup-helpers/03-setup-shell.sh" --non-interactive &>/dev/null || true
+    fi
 
-echo "📜 Copying utility scripts..."
-cp "$SCRIPT_DIR/scripts/"*.sh ~/work/scripts/ 2>/dev/null || true
-cp "$SCRIPT_DIR/scripts/"*.zsh ~/work/scripts/ 2>/dev/null || true
-chmod +x ~/work/scripts/*.sh ~/work/scripts/*.zsh 2>/dev/null || true
+    print_success "Setup finalized"
+    echo ""
 
-echo ""
-echo "✅ Setup complete!"
-echo ""
-echo "Next steps:"
-echo "1. Restart your terminal or run: source ~/.zshrc"
-echo "2. Configure your API keys in ~/.zsh/private/api-keys.zsh"
-echo "3. Set up your context files"
-echo ""
-echo "Your working configuration has been copied and should work exactly as before."
+    # Display completion message
+    print_header "========================================"
+    print_header "✅ Simple Bootstrap Complete!"
+    print_header "========================================"
+    echo ""
+
+    print_success "Your development environment is ready with:"
+    echo "  ✅ Homebrew + essential packages"
+    echo "  ✅ Oh My Zsh + plugins + Powerlevel10k"
+    echo "  ✅ Shell configuration (aliases, functions, paths)"
+    echo "  ✅ Work directory structure"
+    echo "  ✅ Utility scripts"
+    echo ""
+
+    print_status "To start using your new environment:"
+    echo "  source ~/.zshrc"
+    echo "  # or restart your terminal"
+    echo ""
+
+    print_status "For advanced configuration (Git, SSH, context switching):"
+    echo "  cd ~/macos-fresh-setup"
+    echo "  ./bootstrap.sh"
+    echo ""
+
+    print_status "Optional development environments:"
+    echo "  Python:     ./setup-helpers/05-install-python.sh"
+    echo "  Node.js:    ./setup-helpers/06-install-nodejs.sh"
+    echo "  Docker:     ./setup-helpers/04-install-docker.sh"
+    echo "  Databases:  ./setup-helpers/07-setup-databases.sh"
+    echo "  AI/ML:      ./setup-helpers/09-install-ai-ml-tools.sh"
+    echo ""
+
+    print_status "Next steps:"
+    echo "  1. Configure API keys: ~/.config/zsh/private/api-keys.zsh"
+    echo "  2. Run full bootstrap for Git/SSH/context setup"
+    echo "  3. Install optional environments as needed"
+    echo ""
+}
+
+# Run main function
+main "$@"
