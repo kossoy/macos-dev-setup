@@ -93,8 +93,14 @@ main() {
 
     # Get disk usage (only immediate children, not recursive)
     local du_output
-    # Use a safer approach that handles empty results
-    du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
+    # Use fd if available (much faster), otherwise fall back to du
+    if command -v fd >/dev/null 2>&1 && [[ "$max_depth" -eq 1 ]]; then
+        # Use fd to list immediate children only, then du each one
+        du_output=$(fd -d 1 -H --exclude .git . 2>/dev/null | tail -n +2 | xargs -I {} du -sh "{}" 2>/dev/null | sort -rh | head -n "$list_length")
+    else
+        # Fall back to traditional du command
+        du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
+    fi
     
     if [[ -z "$du_output" ]]; then
         echo "│ No files found                                               │"
