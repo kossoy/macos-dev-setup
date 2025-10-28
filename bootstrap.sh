@@ -406,7 +406,7 @@ display_post_installation() {
     echo "1. 🔑 Restore sensitive files:"
     echo "   - API keys: ~/.config/zsh/private/api-keys.zsh"
     echo "   - SSH keys: ~/.ssh/"
-    echo "   - Run: ./setup-helpers/04-restore-sensitive.sh"
+    echo "   - Run: ./setup-helpers/08-restore-sensitive.sh"
     echo ""
     echo "2. 🔄 Reload your shell:"
     echo "   source ~/.zshrc"
@@ -432,7 +432,7 @@ display_post_installation() {
     read -p "Run sensitive files restoration helper now? (y/n): " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        bash "$SCRIPT_DIR/setup-helpers/04-restore-sensitive.sh"
+        bash "$SCRIPT_DIR/setup-helpers/08-restore-sensitive.sh"
     fi
     
     print_success "Setup complete! Welcome to your new development environment! 🚀"

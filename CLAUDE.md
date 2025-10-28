@@ -15,7 +15,7 @@ The main entry point is `bootstrap.sh`, which orchestrates the entire setup proc
 - **setup-helpers/01-install-homebrew.sh** - Package manager installation
 - **setup-helpers/02-install-oh-my-zsh.sh** - Shell framework with plugins
 - **setup-helpers/03-setup-shell.sh** - Shell configuration deployment
-- **setup-helpers/04-restore-sensitive.sh** - Credential restoration helper
+- **setup-helpers/08-restore-sensitive.sh** - Credential restoration helper
 
 ### Context Switching System
 The heart of this repository is the context-aware environment system located in `config/zsh/`:
