@@ -1,16 +1,16 @@
 #!/bin/zsh
 
-# Quick disk usage display - optimized version
-# Shows disk usage of current directory or specified directory
+# Quick disk usage display - simple version
+# Shows disk usage of current directory only (top 10 items)
 
 set -eo pipefail
 
 # Configuration
-DEFAULT_LIST_LENGTH=10
-MIN_BAR_WIDTH=20
-MAX_BAR_WIDTH=40
-SIZE_COL_WIDTH=7
-MIN_NAME_WIDTH=20
+readonly DEFAULT_LIST_LENGTH=10
+readonly MIN_BAR_WIDTH=20
+readonly MAX_BAR_WIDTH=40
+readonly SIZE_COL_WIDTH=7
+readonly MIN_NAME_WIDTH=20
 
 # Initialize colors based on terminal capabilities
 declare GREEN YELLOW RED RESET
@@ -39,81 +39,18 @@ else
     RESET=""
 fi
 
-usage() {
-    cat <<EOF
-Usage: $(basename "$0") [OPTIONS] [DIRECTORY]
-
-Display disk usage in a graphical bar chart format.
-
-Options:
-  -n NUMBER     Number of items to display (default: $DEFAULT_LIST_LENGTH)
-  -d DEPTH      Maximum depth for du (default: 1)
-  -h, --help    Show this help message
-
-Arguments:
-  DIRECTORY     Directory to analyze (default: current directory)
-
-Examples:
-  $(basename "$0")              # Current directory, top 10
-  $(basename "$0") -n 20        # Current directory, top 20
-  $(basename "$0") ~/Downloads  # Downloads folder
-  $(basename "$0") -n 15 ~/work # Work folder, top 15
-EOF
-    exit 0
-}
-
+# Main function - no arguments, just shows current directory
 main() {
     local list_length=$DEFAULT_LIST_LENGTH
-    local target_dir="."
-    local max_depth=1
-    
-    # Parse arguments
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -h|--help)
-                usage
-                ;;
-            -n)
-                list_length="$2"
-                shift 2
-                ;;
-            -d)
-                max_depth="$2"
-                shift 2
-                ;;
-            -*)
-                echo "Unknown option: $1" >&2
-                usage
-                ;;
-            *)
-                target_dir="$1"
-                shift
-                ;;
-        esac
-    done
-    
-    # Validate directory
-    if [[ ! -d "$target_dir" ]]; then
-        echo "Error: Directory '$target_dir' not found" >&2
-        exit 1
-    fi
-    
-    if [[ ! -r "$target_dir" ]]; then
-        echo "Error: Cannot read directory '$target_dir'" >&2
-        exit 1
-    fi
-    
-    # Change to target directory
-    cd "$target_dir" || exit 1
 
     echo "Analyzing: $(pwd)"
 
-    # Get disk usage (only immediate children, not recursive)
+    # Get disk usage data
     local du_output
     local max_size_cmd
 
     # Use fd if available (much faster), otherwise fall back to du
-    if command -v fd >/dev/null 2>&1 && [[ "$max_depth" -eq 1 ]]; then
+    if command -v fd >/dev/null 2>&1; then
         # Use fd to list immediate children only, then du each one
         local items
         items=$(fd -d 1 -H --exclude .git . 2>/dev/null | grep -v '^\.$')
@@ -124,8 +61,8 @@ main() {
     else
         # Fall back to traditional du command (disable pipefail temporarily for glob expansion)
         set +o pipefail
-        du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
-        max_size_cmd=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+        du_output=$(du -sh ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
+        max_size_cmd=$(du -s ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
         set -o pipefail
     fi
 
@@ -187,11 +124,11 @@ main() {
     # Display each item
     while IFS=$'\t' read -r human_size item; do
         [[ -z "${item:-}" ]] && continue
-        
+
         # Get numeric size for percentage
         local size=$(du -s "$item" 2>/dev/null | awk '{print $1}' || echo "0")
         [[ -z "$size" ]] && size=0
-        
+
         # Calculate bar length
         local percent=$(( (size * bar_width) / max_size ))
         (( percent > bar_width )) && percent=$bar_width
@@ -220,10 +157,17 @@ main() {
         # Output line with proper alignment
         printf "│ ${color}%-${bar_width}s${RESET} │ %${SIZE_COL_WIDTH}s │ %-${name_width}s │\n" \
             "${bar}${empty}" "$human_size" "$display_name"
-        
+
     done <<< "$du_output"
 
     echo "└${bar_border}┴${size_border}┴${name_border}┘"
 }
 
-main "$@"
+# Run main function (zsh-specific sourcing check)
+if [[ -n "${ZSH_VERSION}" ]]; then
+    # Running in zsh - check if being sourced
+    [[ "${(%):-%x}" == "${0}" ]] && main "$@"
+else
+    # Fallback for other shells (shouldn't happen with #!/bin/zsh shebang)
+    main "$@"
+fi

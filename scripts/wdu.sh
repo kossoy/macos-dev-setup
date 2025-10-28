@@ -1,77 +1,119 @@
 #!/bin/zsh
 
-# Enhanced graphical disk usage display
-# Original thanks to bolk http://bolknote.ru/2011/09/14/~3407#07
+# Quick disk usage display - optimized version
+# Shows disk usage of current directory or specified directory
 
 set -eo pipefail
 
 # Configuration
-readonly DEFAULT_LIST_LENGTH=10
-readonly MIN_BAR_WIDTH=20
-readonly MAX_BAR_WIDTH=50
-readonly SIZE_COL_WIDTH=7
-readonly MIN_NAME_WIDTH=20
-readonly BAR_CHAR="█"  # Default bar character
+DEFAULT_LIST_LENGTH=10
+MIN_BAR_WIDTH=20
+MAX_BAR_WIDTH=40
+SIZE_COL_WIDTH=7
+MIN_NAME_WIDTH=20
 
 # Initialize colors based on terminal capabilities
-declare color_green color_yellow color_red color_reset
+declare GREEN YELLOW RED RESET
 
 # Only use colors if outputting to a terminal
 if [[ -t 1 ]] || [[ "${FORCE_COLOR:-}" == "1" ]]; then
     # Try 256-color mode if supported, otherwise fall back to 8-color
     if [[ ${TERM:-} =~ 256color ]] || [[ ${COLORTERM:-} =~ (truecolor|24bit) ]]; then
         # 256-color mode
-        color_green=$'\033[38;5;34m'
-        color_yellow=$'\033[38;5;220m'
-        color_red=$'\033[38;5;160m'
-        color_reset=$'\033[0m'
+        GREEN=$'\033[38;5;34m'
+        YELLOW=$'\033[38;5;220m'
+        RED=$'\033[38;5;160m'
+        RESET=$'\033[0m'
     else
         # Basic 8-color mode (more compatible)
-        color_green=$'\033[32m'
-        color_yellow=$'\033[33m'
-        color_red=$'\033[31m'
-        color_reset=$'\033[0m'
+        GREEN=$'\033[32m'
+        YELLOW=$'\033[33m'
+        RED=$'\033[31m'
+        RESET=$'\033[0m'
     fi
 else
     # No colors for non-terminal output
-    color_green=""
-    color_yellow=""
-    color_red=""
-    color_reset=""
+    GREEN=""
+    YELLOW=""
+    RED=""
+    RESET=""
 fi
 
-# Print usage information
 usage() {
     cat <<EOF
-Usage: $(basename "$0") [NUMBER]
+Usage: $(basename "$0") [OPTIONS] [DIRECTORY]
+
 Display disk usage in a graphical bar chart format.
 
-Arguments:
-  NUMBER    Number of items to display (default: $DEFAULT_LIST_LENGTH)
+Options:
+  -n NUMBER     Number of items to display (default: $DEFAULT_LIST_LENGTH)
+  -d DEPTH      Maximum depth for du (default: 1)
+  -h, --help    Show this help message
 
-Example:
-  $(basename "$0")      # Show top 10 items
-  $(basename "$0") 20   # Show top 20 items
+Arguments:
+  DIRECTORY     Directory to analyze (default: current directory)
+
+Examples:
+  $(basename "$0")              # Current directory, top 10
+  $(basename "$0") -n 20        # Current directory, top 20
+  $(basename "$0") ~/Downloads  # Downloads folder
+  $(basename "$0") -n 15 ~/work # Work folder, top 15
 EOF
-    exit 1
+    exit 0
 }
 
-# Display disk usage items with bars
-print_items() {
-    local list_length=${1:-$DEFAULT_LIST_LENGTH}
-
-    # Check if du command is available
-    if ! command -v du &> /dev/null; then
-        echo "Error: 'du' command not found" >&2
-        return 1
+main() {
+    local list_length=$DEFAULT_LIST_LENGTH
+    local target_dir="."
+    local max_depth=1
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                usage
+                ;;
+            -n)
+                list_length="$2"
+                shift 2
+                ;;
+            -d)
+                max_depth="$2"
+                shift 2
+                ;;
+            -*)
+                echo "Unknown option: $1" >&2
+                usage
+                ;;
+            *)
+                target_dir="$1"
+                shift
+                ;;
+        esac
+    done
+    
+    # Validate directory
+    if [[ ! -d "$target_dir" ]]; then
+        echo "Error: Directory '$target_dir' not found" >&2
+        exit 1
     fi
+    
+    if [[ ! -r "$target_dir" ]]; then
+        echo "Error: Cannot read directory '$target_dir'" >&2
+        exit 1
+    fi
+    
+    # Change to target directory
+    cd "$target_dir" || exit 1
 
-    # Get disk usage data
+    echo "Analyzing: $(pwd)"
+
+    # Get disk usage (only immediate children, not recursive)
     local du_output
     local max_size_cmd
 
     # Use fd if available (much faster), otherwise fall back to du
-    if command -v fd >/dev/null 2>&1; then
+    if command -v fd >/dev/null 2>&1 && [[ "$max_depth" -eq 1 ]]; then
         # Use fd to list immediate children only, then du each one
         local items
         items=$(fd -d 1 -H --exclude .git . 2>/dev/null | grep -v '^\.$')
@@ -82,12 +124,11 @@ print_items() {
     else
         # Fall back to traditional du command (disable pipefail temporarily for glob expansion)
         set +o pipefail
-        du_output=$(du -sh ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
-        max_size_cmd=$(du -s ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+        du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
+        max_size_cmd=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
         set -o pipefail
     fi
 
-    # Process empty results
     if [[ -z "$du_output" ]]; then
         echo "┌────────────────────┐"
         echo "│ No files found     │"
@@ -143,26 +184,25 @@ print_items() {
 
     echo "┌${bar_border}┬${size_border}┬${name_border}┐"
 
-    # Display items with bars
+    # Display each item
     while IFS=$'\t' read -r human_size item; do
-        # Skip empty items
         [[ -z "${item:-}" ]] && continue
-
-        # Get numeric size for percentage calculation
+        
+        # Get numeric size for percentage
         local size=$(du -s "$item" 2>/dev/null | awk '{print $1}' || echo "0")
         [[ -z "$size" ]] && size=0
-
+        
         # Calculate bar length
         local percent=$(( (size * bar_width) / max_size ))
         (( percent > bar_width )) && percent=$bar_width
         (( percent < 0 )) && percent=0
 
         # Select color based on percentage of bar width
-        local bar_color="$color_green"
+        local color=$GREEN
         local threshold_yellow=$((bar_width * 33 / 100))
         local threshold_red=$((bar_width * 50 / 100))
-        (( percent >= threshold_yellow )) && bar_color="$color_yellow"
-        (( percent >= threshold_red )) && bar_color="$color_red"
+        (( percent >= threshold_yellow )) && color=$YELLOW
+        (( percent >= threshold_red )) && color=$RED
 
         # Create bar
         local bar=""
@@ -178,53 +218,12 @@ print_items() {
         fi
 
         # Output line with proper alignment
-        printf "│ ${bar_color}%-${bar_width}s${color_reset} │ %${SIZE_COL_WIDTH}s │ %-${name_width}s │\n" \
+        printf "│ ${color}%-${bar_width}s${RESET} │ %${SIZE_COL_WIDTH}s │ %-${name_width}s │\n" \
             "${bar}${empty}" "$human_size" "$display_name"
-
+        
     done <<< "$du_output"
 
     echo "└${bar_border}┴${size_border}┴${name_border}┘"
 }
 
-# Main function
-main() {
-    local list_length=$DEFAULT_LIST_LENGTH
-
-    # Parse arguments
-    if [[ ${1:-} ]]; then
-        if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-            usage
-        fi
-
-        if [[ ! "$1" =~ ^[0-9]+$ ]]; then
-            echo "Error: Argument must be a positive number" >&2
-            usage
-        fi
-
-        list_length=$1
-
-        if (( list_length < 1 || list_length > 100 )); then
-            echo "Error: Number must be between 1 and 100" >&2
-            exit 1
-        fi
-    fi
-
-    # Check if we're in a readable directory
-    if [[ ! -r "." ]]; then
-        echo "Error: Cannot read current directory" >&2
-        exit 1
-    fi
-
-    # Display the chart
-    print_items "$list_length"
-}
-
-# Run main function (zsh-specific sourcing check)
-if [[ -n "${ZSH_VERSION}" ]]; then
-    # Running in zsh - check if being sourced
-    [[ "${(%):-%x}" == "${0}" ]] && main "$@"
-else
-    # Fallback for other shells (shouldn't happen with #!/bin/zsh shebang)
-    main "$@"
-fi
-# vim: set ts=4 sw=4 et:
+main "$@"
