@@ -148,12 +148,12 @@ main() {
         
         # Truncate filename
         local display_name="$item"
-        if (( ${#display_name} > 35 )); then
-            display_name="${display_name:0:32}..."
+        if (( ${#display_name} > 12 )); then
+            display_name="${display_name:0:9}..."
         fi
         
         # Output line
-        printf "│ ${color}%-${BAR_WIDTH}s${RESET} │ %7s %-35s │\n" \
+        printf "│ ${color}%-${BAR_WIDTH}s${RESET} │ %6s %-12s │\n" \
             "${bar}${empty}" "$human_size" "$display_name"
         
     done <<< "$du_output"
