@@ -93,24 +93,31 @@ main() {
 
     # Get disk usage (only immediate children, not recursive)
     local du_output
+    local max_size_cmd
+
     # Use fd if available (much faster), otherwise fall back to du
     if command -v fd >/dev/null 2>&1 && [[ "$max_depth" -eq 1 ]]; then
         # Use fd to list immediate children only, then du each one
-        du_output=$(fd -d 1 -H --exclude .git . 2>/dev/null | tail -n +2 | xargs -I {} du -sh "{}" 2>/dev/null | sort -rh | head -n "$list_length")
+        local items
+        items=$(fd -d 1 -H --exclude .git . 2>/dev/null | tail -n +2)
+        if [[ -n "$items" ]]; then
+            du_output=$(echo "$items" | xargs -I {} du -sh "{}" 2>/dev/null | sort -rh | head -n "$list_length")
+            max_size_cmd=$(echo "$items" | xargs -I {} du -s "{}" 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+        fi
     else
         # Fall back to traditional du command
         du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
+        max_size_cmd=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
     fi
-    
+
     if [[ -z "$du_output" ]]; then
         echo "│ No files found                                               │"
         echo "└──────────────────────────────────────────────────────────────┘"
         return 0
     fi
-    
+
     # Get max size for scaling (numeric)
-    local max_size
-    max_size=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+    local max_size="${max_size_cmd:-1}"
     [[ -z "$max_size" || "$max_size" -eq 0 ]] && max_size=1
     
     # Display each item
