@@ -7,7 +7,10 @@ set -eo pipefail
 
 # Configuration
 DEFAULT_LIST_LENGTH=10
-BAR_WIDTH=30
+MIN_BAR_WIDTH=20
+MAX_BAR_WIDTH=40
+SIZE_COL_WIDTH=7
+MIN_NAME_WIDTH=20
 
 # Color codes
 if [[ ${TERM:-} =~ 256 || ${TERM_PROGRAM:-} = "iTerm.app" ]]; then
@@ -89,7 +92,6 @@ main() {
     cd "$target_dir" || exit 1
 
     echo "Analyzing: $(pwd)"
-    echo "┌────────────────────────────────────┬─────────┬─────────────────────────────────────────┐"
 
     # Get disk usage (only immediate children, not recursive)
     local du_output
@@ -111,15 +113,60 @@ main() {
     fi
 
     if [[ -z "$du_output" ]]; then
-        echo "│ No files found                                                                          │"
-        echo "└────────────────────────────────────┴─────────┴─────────────────────────────────────────┘"
+        echo "┌────────────────────┐"
+        echo "│ No files found     │"
+        echo "└────────────────────┘"
         return 0
     fi
 
     # Get max size for scaling (numeric)
     local max_size="${max_size_cmd:-1}"
     [[ -z "$max_size" || "$max_size" -eq 0 ]] && max_size=1
-    
+
+    # Calculate optimal column widths
+    local term_width=${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}
+
+    # Find longest filename
+    local max_name_len=0
+    while IFS=$'\t' read -r _ item; do
+        [[ -z "${item:-}" ]] && continue
+        local item_len=${#item}
+        (( item_len > max_name_len )) && max_name_len=$item_len
+    done <<< "$du_output"
+
+    # Calculate widths: │ BAR │ SIZE │ NAME │
+    # Fixed: borders (6 chars: "│ ", " │ ", " │ ", " │")
+    local fixed_width=$((6 + SIZE_COL_WIDTH))
+    local available=$((term_width - fixed_width))
+
+    # Allocate space: prefer bar width, then name
+    local bar_width=$MIN_BAR_WIDTH
+    local name_width=$max_name_len
+
+    # Adjust if content is too wide
+    if (( bar_width + name_width > available )); then
+        # Prioritize name, adjust bar if needed
+        name_width=$((available - bar_width))
+        if (( name_width < MIN_NAME_WIDTH )); then
+            name_width=$MIN_NAME_WIDTH
+            bar_width=$((available - name_width))
+            (( bar_width < MIN_BAR_WIDTH )) && bar_width=$MIN_BAR_WIDTH
+        fi
+    fi
+
+    # Cap bar width at maximum
+    (( bar_width > MAX_BAR_WIDTH )) && bar_width=$MAX_BAR_WIDTH
+
+    # Ensure minimum widths
+    (( name_width < MIN_NAME_WIDTH )) && name_width=$MIN_NAME_WIDTH
+
+    # Build box borders
+    local bar_border=$(printf '─%.0s' $(seq 1 $((bar_width + 2))))
+    local size_border=$(printf '─%.0s' $(seq 1 $((SIZE_COL_WIDTH + 2))))
+    local name_border=$(printf '─%.0s' $(seq 1 $((name_width + 2))))
+
+    echo "┌${bar_border}┬${size_border}┬${name_border}┐"
+
     # Display each item
     while IFS=$'\t' read -r human_size item; do
         [[ -z "${item:-}" ]] && continue
@@ -130,36 +177,37 @@ main() {
         [[ -z "$size" ]] && size=0
         
         # Calculate bar length
-        local percent=$(( (size * BAR_WIDTH) / max_size ))
-        (( percent > BAR_WIDTH )) && percent=$BAR_WIDTH
+        local percent=$(( (size * bar_width) / max_size ))
+        (( percent > bar_width )) && percent=$bar_width
         (( percent < 0 )) && percent=0
-        
-        # Select color
+
+        # Select color based on percentage of bar width
         local color=$GREEN
-        (( percent >= 13 )) && color=$YELLOW
-        (( percent >= 20 )) && color=$RED
-        
+        local threshold_yellow=$((bar_width * 33 / 100))
+        local threshold_red=$((bar_width * 50 / 100))
+        (( percent >= threshold_yellow )) && color=$YELLOW
+        (( percent >= threshold_red )) && color=$RED
+
         # Create bar
         local bar=""
         if (( percent > 0 )); then
             bar=$(printf "%${percent}s" | tr ' ' '█')
         fi
-        local empty=$(printf "%$((BAR_WIDTH - percent))s" | tr ' ' '░')
-        
+        local empty=$(printf "%$((bar_width - percent))s" | tr ' ' '░')
+
         # Truncate filename if needed
         local display_name="$item"
-        local max_name_len=40
-        if (( ${#display_name} > max_name_len )); then
-            display_name="${display_name:0:$((max_name_len - 3))}..."
+        if (( ${#display_name} > name_width )); then
+            display_name="${display_name:0:$((name_width - 3))}..."
         fi
 
         # Output line with proper alignment
-        printf "│ ${color}%-${BAR_WIDTH}s${RESET} │ %7s │ %-40s │\n" \
+        printf "│ ${color}%-${bar_width}s${RESET} │ %${SIZE_COL_WIDTH}s │ %-${name_width}s │\n" \
             "${bar}${empty}" "$human_size" "$display_name"
         
     done <<< "$du_output"
 
-    echo "└────────────────────────────────────┴─────────┴─────────────────────────────────────────┘"
+    echo "└${bar_border}┴${size_border}┴${name_border}┘"
 }
 
 main "$@"
