@@ -41,8 +41,13 @@ alias fastping='ping -c 100 -s.2'
 # =============================================================================
 
 # File operations
-alias files='find . -type f | wc -l'
-alias dirs='find . -type d | wc -l'
+if command -v fd >/dev/null 2>&1; then
+    alias files='fd -t f | wc -l'
+    alias dirs='fd -t d | wc -l'
+else
+    alias files='find . -type f | wc -l'
+    alias dirs='find . -type d | wc -l'
+fi
 
 # =============================================================================
 # KUBERNETES ALIASES
