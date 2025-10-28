@@ -87,13 +87,14 @@ main() {
     
     # Change to target directory
     cd "$target_dir" || exit 1
-    
+
     echo "Analyzing: $(pwd)"
     echo "┌──────────────────────────────────────────────────────────────┐"
-    
+
     # Get disk usage (only immediate children, not recursive)
     local du_output
-    du_output=$(du -sh -d "$max_depth" * .[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
+    # Use a safer approach that handles empty results
+    du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
     
     if [[ -z "$du_output" ]]; then
         echo "│ No files found                                               │"
@@ -103,7 +104,7 @@ main() {
     
     # Get max size for scaling (numeric)
     local max_size
-    max_size=$(du -s -d "$max_depth" * .[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+    max_size=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
     [[ -z "$max_size" || "$max_size" -eq 0 ]] && max_size=1
     
     # Display each item
