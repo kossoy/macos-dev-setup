@@ -169,7 +169,7 @@ EOF
 print_success ".zshrc created"
 
 # Create context template if it doesn't exist
-if [[ ! -f ~/.config/zsh/contexts/current.zsh" ]]; then
+if [[ ! -f ~/.config/zsh/contexts/current.zsh ]]; then
     print_status "Creating default context..."
     cat > ~/.config/zsh/contexts/current.zsh << 'EOF'
 # Default context (update via 'work' or 'personal' commands)
