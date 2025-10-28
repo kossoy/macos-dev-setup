@@ -7,7 +7,7 @@ set -eo pipefail
 
 # Configuration
 DEFAULT_LIST_LENGTH=10
-BAR_WIDTH=40
+BAR_WIDTH=30
 
 # Color codes
 if [[ ${TERM:-} =~ 256 || ${TERM_PROGRAM:-} = "iTerm.app" ]]; then
@@ -89,7 +89,7 @@ main() {
     cd "$target_dir" || exit 1
 
     echo "Analyzing: $(pwd)"
-    echo "┌──────────────────────────────────────────────────────────────┐"
+    echo "┌────────────────────────────────────┬─────────┬─────────────────────────────────────────┐"
 
     # Get disk usage (only immediate children, not recursive)
     local du_output
@@ -111,8 +111,8 @@ main() {
     fi
 
     if [[ -z "$du_output" ]]; then
-        echo "│ No files found                                               │"
-        echo "└──────────────────────────────────────────────────────────────┘"
+        echo "│ No files found                                                                          │"
+        echo "└────────────────────────────────────┴─────────┴─────────────────────────────────────────┘"
         return 0
     fi
 
@@ -146,19 +146,20 @@ main() {
         fi
         local empty=$(printf "%$((BAR_WIDTH - percent))s" | tr ' ' '░')
         
-        # Truncate filename
+        # Truncate filename if needed
         local display_name="$item"
-        if (( ${#display_name} > 12 )); then
-            display_name="${display_name:0:9}..."
+        local max_name_len=40
+        if (( ${#display_name} > max_name_len )); then
+            display_name="${display_name:0:$((max_name_len - 3))}..."
         fi
-        
-        # Output line
-        printf "│ ${color}%-${BAR_WIDTH}s${RESET} │ %6s %-12s │\n" \
+
+        # Output line with proper alignment
+        printf "│ ${color}%-${BAR_WIDTH}s${RESET} │ %7s │ %-40s │\n" \
             "${bar}${empty}" "$human_size" "$display_name"
         
     done <<< "$du_output"
-    
-    echo "└──────────────────────────────────────────────────────────────┘"
+
+    echo "└────────────────────────────────────┴─────────┴─────────────────────────────────────────┘"
 }
 
 main "$@"
