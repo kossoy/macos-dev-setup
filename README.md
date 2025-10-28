@@ -7,7 +7,7 @@
 ### ⚡ One-Liner Installation (Recommended)
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/username/macos-fresh-setup/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/kossoy/macos-dev-setup/main/install.sh)
 ```
 
 This single command will:
@@ -23,8 +23,8 @@ If you prefer manual control:
 
 ```bash
 # Clone the repository
-git clone https://github.com/username/macos-fresh-setup.git
-cd macos-fresh-setup
+git clone https://github.com/kossoy/macos-dev-setup.git
+cd macos-dev-setup
 
 # Option 1: Simple Bootstrap (non-interactive, sensible defaults)
 ./simple-bootstrap.sh
