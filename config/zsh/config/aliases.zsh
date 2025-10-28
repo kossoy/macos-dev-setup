@@ -40,10 +40,6 @@ alias fastping='ping -c 100 -s.2'
 # DEVELOPMENT ALIASES
 # =============================================================================
 
-# Laravel/Sail
-alias sail='bash vendor/bin/sail'
-alias laravel='$HOME/.composer/vendor/bin/laravel'
-
 # File operations
 alias files='find . -type f | wc -l'
 alias dirs='find . -type d | wc -l'
@@ -128,14 +124,12 @@ alias gstp='git stash pop'
 # =============================================================================
 
 # DNS testing
-alias dnstest='bash $HOME/work/home/playground/_net/dnsperftest/dnstest.sh | sort -k 36 -n'
+alias dnstest='$HOME/work/home/playground/_net/dnsperftest/dnstest.sh | sort -k 36 -n'
 
 # Disk usage analyzer
 if [[ -f "$HOME/macos-dev-setup/scripts/wdu.sh" ]]; then
-    alias wdu="bash $HOME/macos-dev-setup/scripts/wdu.sh"
-    alias wdu-quick="bash $HOME/macos-dev-setup/scripts/wdu-quick.sh"
-elif [[ -f "$HOME/work/bin/ai_wdu.sh" ]]; then
-    alias wdu="bash $HOME/work/bin/ai_wdu.sh 2> /dev/null"
+    alias wdu="$HOME/macos-dev-setup/scripts/wdu.sh"
+    alias wdu-quick="$HOME/macos-dev-setup/scripts/wdu-quick.sh"
 fi
 
 alias vw-monitor="$HOME/bin/vaultwarden-backup-monitor.zsh"
