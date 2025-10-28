@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 
 # Quick disk usage display - optimized version
 # Shows disk usage of current directory or specified directory
@@ -12,17 +12,32 @@ MAX_BAR_WIDTH=40
 SIZE_COL_WIDTH=7
 MIN_NAME_WIDTH=20
 
-# Color codes
-if [[ ${TERM:-} =~ 256 || ${TERM_PROGRAM:-} = "iTerm.app" ]]; then
-    GREEN="\033[38;5;34m"
-    YELLOW="\033[38;5;220m"
-    RED="\033[38;5;160m"
+# Initialize colors based on terminal capabilities
+declare GREEN YELLOW RED RESET
+
+# Only use colors if outputting to a terminal
+if [[ -t 1 ]] || [[ "${FORCE_COLOR:-}" == "1" ]]; then
+    # Try 256-color mode if supported, otherwise fall back to 8-color
+    if [[ ${TERM:-} =~ 256color ]] || [[ ${COLORTERM:-} =~ (truecolor|24bit) ]]; then
+        # 256-color mode
+        GREEN=$'\033[38;5;34m'
+        YELLOW=$'\033[38;5;220m'
+        RED=$'\033[38;5;160m'
+        RESET=$'\033[0m'
+    else
+        # Basic 8-color mode (more compatible)
+        GREEN=$'\033[32m'
+        YELLOW=$'\033[33m'
+        RED=$'\033[31m'
+        RESET=$'\033[0m'
+    fi
 else
-    GREEN="\033[32m"
-    YELLOW="\033[33m"
-    RED="\033[31m"
+    # No colors for non-terminal output
+    GREEN=""
+    YELLOW=""
+    RED=""
+    RESET=""
 fi
-RESET="\033[0m"
 
 usage() {
     cat <<EOF
@@ -107,9 +122,11 @@ main() {
             max_size_cmd=$(echo "$items" | xargs -I {} du -s "{}" 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
         fi
     else
-        # Fall back to traditional du command
+        # Fall back to traditional du command (disable pipefail temporarily for glob expansion)
+        set +o pipefail
         du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
         max_size_cmd=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+        set -o pipefail
     fi
 
     if [[ -z "$du_output" ]]; then

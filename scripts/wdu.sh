@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 
 # Enhanced graphical disk usage display
 # Original thanks to bolk http://bolknote.ru/2011/09/14/~3407#07
@@ -13,12 +13,31 @@ readonly SIZE_COL_WIDTH=7
 readonly MIN_NAME_WIDTH=20
 readonly BAR_CHAR="█"  # Default bar character
 
-# Color codes based on terminal capabilities
-declare -a COLORS
-if [[ ${TERM:-} =~ 256 || ${TERM_PROGRAM:-} = "iTerm.app" ]]; then
-    COLORS=("38;5;34" "38;5;220" "38;5;160")  # 256-color terminal
+# Initialize colors based on terminal capabilities
+declare color_green color_yellow color_red color_reset
+
+# Only use colors if outputting to a terminal
+if [[ -t 1 ]] || [[ "${FORCE_COLOR:-}" == "1" ]]; then
+    # Try 256-color mode if supported, otherwise fall back to 8-color
+    if [[ ${TERM:-} =~ 256color ]] || [[ ${COLORTERM:-} =~ (truecolor|24bit) ]]; then
+        # 256-color mode
+        color_green=$'\033[38;5;34m'
+        color_yellow=$'\033[38;5;220m'
+        color_red=$'\033[38;5;160m'
+        color_reset=$'\033[0m'
+    else
+        # Basic 8-color mode (more compatible)
+        color_green=$'\033[32m'
+        color_yellow=$'\033[33m'
+        color_red=$'\033[31m'
+        color_reset=$'\033[0m'
+    fi
 else
-    COLORS=(32 33 31)  # Basic terminal colors
+    # No colors for non-terminal output
+    color_green=""
+    color_yellow=""
+    color_red=""
+    color_reset=""
 fi
 
 # Print usage information
@@ -61,9 +80,11 @@ print_items() {
             max_size_cmd=$(echo "$items" | xargs -I {} du -s "{}" 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
         fi
     else
-        # Fall back to traditional du command
+        # Fall back to traditional du command (disable pipefail temporarily for glob expansion)
+        set +o pipefail
         du_output=$(du -sh ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
         max_size_cmd=$(du -s ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+        set -o pipefail
     fi
 
     # Process empty results
@@ -138,12 +159,11 @@ print_items() {
         (( percent < 0 )) && percent=0
 
         # Select color based on percentage of bar width
-        local color_idx=0
+        local bar_color="$color_green"
         local threshold_yellow=$((bar_width * 33 / 100))
         local threshold_red=$((bar_width * 50 / 100))
-        (( percent >= threshold_yellow )) && color_idx=1
-        (( percent >= threshold_red )) && color_idx=2
-        local color=${COLORS[$color_idx]}
+        (( percent >= threshold_yellow )) && bar_color="$color_yellow"
+        (( percent >= threshold_red )) && bar_color="$color_red"
 
         # Create bar
         local bar=""
@@ -159,7 +179,7 @@ print_items() {
         fi
 
         # Output line with proper alignment
-        printf "│ \033[${color}m%-${bar_width}s\033[0m │ %${SIZE_COL_WIDTH}s │ %-${name_width}s │\n" \
+        printf "│ ${bar_color}%-${bar_width}s${color_reset} │ %${SIZE_COL_WIDTH}s │ %-${name_width}s │\n" \
             "${bar}${empty}" "$human_size" "$display_name"
 
     done <<< "$du_output"
@@ -200,8 +220,12 @@ main() {
     print_items "$list_length"
 }
 
-# Run main function
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# Run main function (zsh-specific sourcing check)
+if [[ -n "${ZSH_VERSION}" ]]; then
+    # Running in zsh - check if being sourced
+    [[ "${(%):-%x}" == "${0}" ]] && main "$@"
+else
+    # Fallback for other shells (shouldn't happen with #!/bin/zsh shebang)
     main "$@"
 fi
 # vim: set ts=4 sw=4 et:
