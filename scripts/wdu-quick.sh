@@ -99,7 +99,7 @@ main() {
     if command -v fd >/dev/null 2>&1 && [[ "$max_depth" -eq 1 ]]; then
         # Use fd to list immediate children only, then du each one
         local items
-        items=$(fd -d 1 -H --exclude .git . 2>/dev/null | tail -n +2)
+        items=$(fd -d 1 -H --exclude .git . 2>/dev/null | grep -v '^\.$')
         if [[ -n "$items" ]]; then
             du_output=$(echo "$items" | xargs -I {} du -sh "{}" 2>/dev/null | sort -rh | head -n "$list_length")
             max_size_cmd=$(echo "$items" | xargs -I {} du -s "{}" 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
