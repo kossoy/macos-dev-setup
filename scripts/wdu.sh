@@ -149,8 +149,7 @@ print_items() {
         [[ -z "${item:-}" ]] && continue
 
         # Get numeric size for percentage calculation
-        local size
-        size=$(du -s "$item" 2>/dev/null | awk '{print $1}' || echo "0")
+        local size=$(du -s "$item" 2>/dev/null | awk '{print $1}' || echo "0")
         [[ -z "$size" ]] && size=0
 
         # Calculate bar length
