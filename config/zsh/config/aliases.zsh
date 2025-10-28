@@ -130,8 +130,11 @@ alias gstp='git stash pop'
 # DNS testing
 alias dnstest='bash $HOME/work/home/playground/_net/dnsperftest/dnstest.sh | sort -k 36 -n'
 
-# AI utilities (if available)
-if [[ -f "$HOME/work/bin/ai_wdu.sh" ]]; then
+# Disk usage analyzer
+if [[ -f "$HOME/macos-dev-setup/scripts/wdu.sh" ]]; then
+    alias wdu="bash $HOME/macos-dev-setup/scripts/wdu.sh"
+    alias wdu-quick="bash $HOME/macos-dev-setup/scripts/wdu-quick.sh"
+elif [[ -f "$HOME/work/bin/ai_wdu.sh" ]]; then
     alias wdu="bash $HOME/work/bin/ai_wdu.sh 2> /dev/null"
 fi
 
