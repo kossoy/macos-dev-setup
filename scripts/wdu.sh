@@ -66,7 +66,7 @@ main() {
     local list_length=$DEFAULT_LIST_LENGTH
     local target_dir="."
     local max_depth=1
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -91,18 +91,18 @@ main() {
                 ;;
         esac
     done
-    
+
     # Validate directory
     if [[ ! -d "$target_dir" ]]; then
         echo "Error: Directory '$target_dir' not found" >&2
         exit 1
     fi
-    
+
     if [[ ! -r "$target_dir" ]]; then
         echo "Error: Cannot read directory '$target_dir'" >&2
         exit 1
     fi
-    
+
     # Change to target directory
     cd "$target_dir" || exit 1
 
@@ -110,22 +110,48 @@ main() {
 
     # Get disk usage (only immediate children, not recursive)
     local du_output
+    local du_numeric_output
     local max_size_cmd
 
     # Use fd if available (much faster), otherwise fall back to du
     if command -v fd >/dev/null 2>&1 && [[ "$max_depth" -eq 1 ]]; then
         # Use fd to list immediate children only, then du each one
+        set +o pipefail
         local items
         items=$(fd -d 1 -H --exclude .git . 2>/dev/null | grep -v '^\.$')
         if [[ -n "$items" ]]; then
-            du_output=$(echo "$items" | xargs -I {} du -sh "{}" 2>/dev/null | sort -rh | head -n "$list_length")
-            max_size_cmd=$(echo "$items" | xargs -I {} du -s "{}" 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+            # Get numeric sizes only, sorted by size
+            du_numeric_output=$(echo "$items" | xargs -I {} du -s "{}" 2>/dev/null | sort -rn | head -n "$list_length")
+            # Convert to human-readable format (using awk)
+            # Note: du -s outputs in KB (512-byte blocks * 2 = KB on macOS)
+            du_output=$(echo "$du_numeric_output" | awk 'BEGIN {FS="\t"; OFS="\t"} {
+                size = $1
+                item = $2
+
+                # Convert KB to human-readable
+                if (size >= 1048576) printf "%.1fG\t%s\n", size/1048576, item
+                else if (size >= 1024) printf "%.0fM\t%s\n", size/1024, item
+                else printf "%.0fK\t%s\n", size, item
+            }')
+            max_size_cmd=$(echo "$du_numeric_output" | head -1 | awk '{print $1}')
         fi
+        set -o pipefail
     else
         # Fall back to traditional du command (disable pipefail temporarily for glob expansion)
         set +o pipefail
-        du_output=$(du -sh -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rh | head -n "$list_length")
-        max_size_cmd=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+        du_numeric_output=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -n "$list_length")
+        # Convert to human-readable format (using awk)
+        # Note: du -s outputs in KB (512-byte blocks * 2 = KB on macOS)
+        du_output=$(echo "$du_numeric_output" | awk 'BEGIN {FS="\t"; OFS="\t"} {
+            size = $1
+            item = $2
+
+            # Convert KB to human-readable
+            if (size >= 1048576) printf "%.1fG\t%s\n", size/1048576, item
+            else if (size >= 1024) printf "%.0fM\t%s\n", size/1024, item
+            else printf "%.0fK\t%s\n", size, item
+        }' || true)
+        max_size_cmd=$(echo "$du_numeric_output" | head -1 | awk '{print $1}')
         set -o pipefail
     fi
 
@@ -139,6 +165,13 @@ main() {
     # Get max size for scaling (numeric)
     local max_size="${max_size_cmd:-1}"
     [[ -z "$max_size" || "$max_size" -eq 0 ]] && max_size=1
+
+    # Create associative array to cache numeric sizes (avoid redundant du calls)
+    typeset -A size_cache
+    while IFS=$'\t' read -r size item; do
+        [[ -z "${item:-}" ]] && continue
+        size_cache[$item]=$size
+    done <<< "$du_numeric_output"
 
     # Calculate optimal column widths
     local term_width=${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}
@@ -187,9 +220,9 @@ main() {
     # Display each item
     while IFS=$'\t' read -r human_size item; do
         [[ -z "${item:-}" ]] && continue
-        
-        # Get numeric size for percentage
-        local size=$(du -s "$item" 2>/dev/null | awk '{print $1}' || echo "0")
+
+        # Get numeric size from cache (avoiding redundant du call)
+        local size=${size_cache[$item]:-0}
         [[ -z "$size" ]] && size=0
         
         # Calculate bar length

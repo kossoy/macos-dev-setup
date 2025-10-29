@@ -132,7 +132,10 @@ alias gstp='git stash pop'
 alias dnstest='$HOME/work/home/playground/_net/dnsperftest/dnstest.sh | sort -k 36 -n'
 
 # Disk usage analyzer
-if [[ -f "$HOME/macos-dev-setup/scripts/wdu.sh" ]]; then
+if [[ -f "$HOME/work/scripts/wdu.sh" ]]; then
+    alias wdu="$HOME/work/scripts/wdu.sh"
+    alias wdu-quick="$HOME/work/scripts/wdu-quick.sh"
+elif [[ -f "$HOME/macos-dev-setup/scripts/wdu.sh" ]]; then
     alias wdu="$HOME/macos-dev-setup/scripts/wdu.sh"
     alias wdu-quick="$HOME/macos-dev-setup/scripts/wdu-quick.sh"
 fi
