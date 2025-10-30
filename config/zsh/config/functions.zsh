@@ -403,19 +403,20 @@ work() {
             echo -n "   Press Enter after confirming (or canceling) the browser change..."
             read
 
-            # Poll for browser change (max 5 seconds)
+            # Poll for browser change (max 10 seconds)
             echo "   ⏳ Waiting for system to update browser settings..."
-            local max_attempts=10
+            local max_attempts=20
             local attempt=0
             while [[ $attempt -lt $max_attempts ]]; do
+                sleep 0.5
                 local new_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
 
-                if [[ "$new_browser" != "$current_browser" ]]; then
+                # Check if browser now matches expected
+                if [[ "$new_browser" == "$expected_bundle_id" ]]; then
                     echo "   ✅ Browser settings updated"
                     break
                 fi
 
-                sleep 0.5
                 ((attempt++))
             done
 
@@ -577,19 +578,20 @@ personal() {
             echo -n "   Press Enter after confirming (or canceling) the browser change..."
             read
 
-            # Poll for browser change (max 5 seconds)
+            # Poll for browser change (max 10 seconds)
             echo "   ⏳ Waiting for system to update browser settings..."
-            local max_attempts=10
+            local max_attempts=20
             local attempt=0
             while [[ $attempt -lt $max_attempts ]]; do
+                sleep 0.5
                 local new_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
 
-                if [[ "$new_browser" != "$current_browser" ]]; then
+                # Check if browser now matches expected
+                if [[ "$new_browser" == "$expected_bundle_id" ]]; then
                     echo "   ✅ Browser settings updated"
                     break
                 fi
 
-                sleep 0.5
                 ((attempt++))
             done
 
