@@ -99,6 +99,9 @@ alias hide_hidden='defaults write com.apple.finder AppleShowAllFiles NO && killa
 
 # LaunchAgent management
 alias la-status='$HOME/work/scripts/launchagent-status.sh'
+alias la-load='$HOME/work/scripts/launchagent-load.sh'
+alias la-unload='$HOME/work/scripts/launchagent-unload.sh'
+alias la-reload='$HOME/work/scripts/launchagent-reload.sh'
 
 # =============================================================================
 # DOCKER ALIASES
