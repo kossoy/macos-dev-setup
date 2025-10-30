@@ -102,6 +102,8 @@ alias la-status='$HOME/work/scripts/launchagent-status.sh'
 alias la-load='$HOME/work/scripts/launchagent-load.sh'
 alias la-unload='$HOME/work/scripts/launchagent-unload.sh'
 alias la-reload='$HOME/work/scripts/launchagent-reload.sh'
+alias la-create='$HOME/work/scripts/launchagent-create.sh'
+alias la-dashboard='$HOME/work/scripts/launchagent-dashboard.sh'
 
 # Vaultwarden backup management
 alias vw-backup='$HOME/work/scripts/vaultwarden-backup.zsh'
