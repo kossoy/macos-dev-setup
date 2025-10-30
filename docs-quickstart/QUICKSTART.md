@@ -18,7 +18,7 @@ This package sets up a complete development environment with:
 ### 1. Run the Bootstrap Script
 
 ```bash
-cd macos-fresh-setup
+cd macos-dev-setup
 chmod +x bootstrap.sh
 ./bootstrap.sh
 ```
@@ -190,7 +190,7 @@ brew install --cask cursor
 ### 3. Get Full Documentation
 ```bash
 # Clone comprehensive setup guides
-git clone https://github.com/username/macos-fresh-setup ~/work/docs/macos-setup-full
+git clone https://github.com/kossoy/macos-dev-setup ~/work/docs/macos-setup-full
 
 # Browse setup guides (01-14)
 open ~/work/docs/macos-setup-full/README.md

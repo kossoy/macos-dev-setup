@@ -165,7 +165,7 @@ EOF
     echo ""
 
     print_status "For advanced configuration (Git, SSH, context switching):"
-    echo "  cd ~/macos-fresh-setup"
+    echo "  cd ~/macos-dev-setup"
     echo "  ./bootstrap.sh"
     echo ""
 

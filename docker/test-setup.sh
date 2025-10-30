@@ -7,7 +7,7 @@ echo "🐳 Docker Test Environment for macOS Fresh Setup"
 echo "================================================"
 
 # Navigate to package directory
-cd /home/testuser/macos-fresh-setup
+cd /home/testuser/macos-dev-setup
 
 echo "📁 Package contents:"
 ls -la

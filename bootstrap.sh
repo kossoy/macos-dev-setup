@@ -421,7 +421,7 @@ display_post_installation() {
     echo "   # Add to GitHub: https://github.com/settings/keys"
     echo ""
     echo "5. 📚 Get full documentation:"
-    echo "   git clone https://github.com/username/macos-fresh-setup ~/work/docs/macos-setup-full"
+    echo "   git clone https://github.com/kossoy/macos-dev-setup ~/work/docs/macos-setup-full"
     echo ""
     echo "6. 🧪 Test your setup:"
     echo "   work      # Switch to work context"

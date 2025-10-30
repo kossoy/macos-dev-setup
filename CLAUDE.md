@@ -69,7 +69,7 @@ The system creates a standardized work directory:
 ### Setup and Installation
 ```bash
 # One-liner installation (recommended)
-bash <(curl -fsSL https://raw.githubusercontent.com/username/macos-fresh-setup/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/kossoy/macos-dev-setup/main/install.sh)
 
 # Simple bootstrap (non-interactive, sensible defaults)
 ./simple-bootstrap.sh

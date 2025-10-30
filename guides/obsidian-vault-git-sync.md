@@ -6,7 +6,7 @@ This guide explains how to sync your Mac OS fresh setup documentation vault acro
 
 ## Repository Details
 
-- **Repository**: https://github.com/username/macos-fresh-setup
+- **Repository**: https://github.com/username/macos-dev-setup
 - **Visibility**: Private
 - **Purpose**: Sync Mac OS setup documentation across devices
 
@@ -27,7 +27,7 @@ This guide explains how to sync your Mac OS fresh setup documentation vault acro
 
 ```bash
 cd ~/Documents  # or your preferred location
-gh repo clone username/macos-fresh-setup
+gh repo clone username/macos-dev-setup
 ```
 
 ### 2. Install Obsidian Git Plugin
@@ -67,7 +67,7 @@ Navigate to **Settings** → **Community plugins** → **Obsidian Git**:
 ### 4. Configure Git Author (If Not Already Set)
 
 ```bash
-cd ~/Documents/macos-fresh-setup  # or wherever you cloned
+cd ~/Documents/macos-dev-setup  # or wherever you cloned
 git config user.name "Your Name"
 git config user.email "your.email@example.com"
 ```
@@ -221,10 +221,10 @@ Useful Obsidian Git commands (Cmd/Ctrl + P):
 
 ```bash
 # View repository status
-gh repo view username/macos-fresh-setup
+gh repo view username/macos-dev-setup
 
 # Clone on new device
-gh repo clone username/macos-fresh-setup
+gh repo clone username/macos-dev-setup
 
 # Manual git operations (if needed)
 cd /path/to/vault

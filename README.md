@@ -13,7 +13,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kossoy/macos-dev-setup/main/
 This single command will:
 1. ✅ Validate your macOS system compatibility
 2. ✅ Install Xcode Command Line Tools (if needed)
-3. ✅ Clone this repository to `~/macos-fresh-setup`
+3. ✅ Clone this repository to `~/macos-dev-setup`
 4. ✅ Run simple-bootstrap.sh automatically
 5. ✅ Offer to run full bootstrap.sh for advanced setup
 

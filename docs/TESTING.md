@@ -56,7 +56,7 @@ ls ~/.oh-my-zsh          # Should not exist on clean system
 
 ```bash
 # Navigate to package directory
-cd /path/to/macos-fresh-setup
+cd /path/to/macos-dev-setup
 
 # Make bootstrap script executable
 chmod +x bootstrap.sh

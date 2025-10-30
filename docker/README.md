@@ -44,7 +44,7 @@ docker compose run test-environment ./docker/test-setup.sh
 # Interactive testing
 docker compose up --build
 # Then inside container:
-cd /home/testuser/macos-fresh-setup
+cd /home/testuser/macos-dev-setup
 ./bootstrap.sh
 ```
 
@@ -64,7 +64,7 @@ sudo createhomedir -c -u testuser
 
 # Switch to test user
 su - testuser
-cd /path/to/macos-fresh-setup
+cd /path/to/macos-dev-setup
 ./bootstrap.sh
 ```
 
