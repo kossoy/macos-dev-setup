@@ -9,13 +9,28 @@ This is a semi-automated macOS development environment setup package designed fo
 ## Core Architecture
 
 ### Bootstrap System
-The main entry point is `bootstrap.sh`, which orchestrates the entire setup process through modular helper scripts:
 
-- **bootstrap.sh** - Main orchestration script with interactive prompts
-- **setup-helpers/01-install-homebrew.sh** - Package manager installation
-- **setup-helpers/02-install-oh-my-zsh.sh** - Shell framework with plugins
-- **setup-helpers/03-setup-shell.sh** - Shell configuration deployment
-- **setup-helpers/08-restore-sensitive.sh** - Credential restoration helper
+**Root Directory Entry Points** (orchestrators users run directly):
+- **install.sh** - Remote one-liner installer (`bash <(curl ...)`)
+  - Clones repository → runs simple-bootstrap.sh → offers bootstrap.sh
+- **bootstrap.sh** - Interactive full setup orchestrator
+  - Calls multiple setup-helpers scripts with user prompts
+  - Users run: `git clone ... && cd macos-dev-setup && ./bootstrap.sh`
+- **simple-bootstrap.sh** - Non-interactive automated setup orchestrator
+  - Same as bootstrap but with sensible defaults, no prompts
+
+**setup-helpers/ Directory** (modular components called by orchestrators):
+- **01-install-homebrew.sh** - Package manager installation
+- **02-install-oh-my-zsh.sh** - Shell framework with plugins
+- **03-setup-shell.sh** - Shell configuration deployment
+- **04-install-docker.sh** - Docker Desktop setup
+- **05-install-python.sh** - Python + pyenv (supports --mode=ai-ml)
+- **06-install-nodejs.sh** - Node.js + Volta
+- **07-setup-databases.sh** - Docker databases
+- **08-restore-sensitive.sh** - Credential restoration helper
+- **09-install-ai-ml-tools.sh** - AI/ML tooling
+
+Users can run individual helpers directly: `./setup-helpers/05-install-python.sh --mode=ai-ml`
 
 ### Context Switching System
 The heart of this repository is the context-aware environment system located in `config/zsh/`:
