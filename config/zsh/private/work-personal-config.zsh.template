@@ -15,8 +15,8 @@ export WORK_GH_USER="your-work-github-username"
 export PERSONAL_GH_USER="your-personal-github-username"
 
 # GitHub hosts
-export WORK_GITHUB_HOST="github.com"           # Or github.yourcompany.com for Enterprise
-export PERSONAL_GITHUB_HOST="github.com"
+export WORK_GITHUB_HOST="github.com"           # e.g., "github.com" or "github.company.com" for Enterprise
+export PERSONAL_GITHUB_HOST="github.com"       # Usually "github.com"
 
 # Work context identifiers (collected during setup)
 export WORK_ORG="YOUR_COMPANY_ORG"             # Internal identifier (e.g., "ACME_CORP", "SAP_CONCUR")

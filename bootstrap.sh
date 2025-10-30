@@ -151,6 +151,17 @@ collect_user_info() {
     read -p "Enter work GitHub username: " WORK_GITHUB_USER
     read -p "Enter personal GitHub username: " PERSONAL_GITHUB_USER
 
+    # GitHub hosts
+    echo ""
+    echo "GitHub hosts:"
+    echo "  - For GitHub.com, just press Enter"
+    echo "  - For GitHub Enterprise, enter the hostname (e.g., github.company.com)"
+    read -p "Enter work GitHub host (default: github.com): " WORK_GITHUB_HOST
+    WORK_GITHUB_HOST=${WORK_GITHUB_HOST:-github.com}
+
+    read -p "Enter personal GitHub host (default: github.com): " PERSONAL_GITHUB_HOST
+    PERSONAL_GITHUB_HOST=${PERSONAL_GITHUB_HOST:-github.com}
+
     # Detect installed browsers
     echo ""
     print_status "Detecting installed browsers..."
@@ -238,8 +249,8 @@ export WORK_GH_USER="${WORK_GITHUB_USER}"
 export PERSONAL_GH_USER="${PERSONAL_GITHUB_USER}"
 
 # GitHub hosts
-export WORK_GITHUB_HOST="github.com"           # Default, change if using GitHub Enterprise
-export PERSONAL_GITHUB_HOST="github.com"
+export WORK_GITHUB_HOST="${WORK_GITHUB_HOST}"           # e.g., "github.com" or "github.company.com"
+export PERSONAL_GITHUB_HOST="${PERSONAL_GITHUB_HOST}"   # Usually "github.com"
 
 # Work context identifiers (collected during setup)
 export WORK_ORG="${WORK_CONTEXT}"              # Internal identifier
