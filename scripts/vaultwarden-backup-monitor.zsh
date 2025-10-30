@@ -53,19 +53,19 @@ status_icon() {
     local state="$1"
     case $state in
         "ok"|"success"|"good")
-            echo "${GREEN}✅${NC}"
+            echo "${GREEN}✅ ${NC}"
             ;;
         "warning"|"caution")
-            echo "${YELLOW}⚠️${NC}"
+            echo "${YELLOW}⚠️ ${NC}"
             ;;
         "error"|"critical"|"fail")
-            echo "${RED}❌${NC}"
+            echo "${RED}❌ ${NC}"
             ;;
         "info")
-            echo "${BLUE}ℹ️${NC}"
+            echo "${BLUE}ℹ️ ${NC}"
             ;;
         *)
-            echo "•"
+            echo "• "
             ;;
     esac
 }
@@ -430,8 +430,15 @@ generate_health_score() {
 
     echo ""
     echo "${color}╔════════════════════════════════╗${NC}"
-    echo "${color}║  HEALTH SCORE: ${score}/100        ║${NC}"
-    echo "${color}║  STATUS: ${health_status}$(printf '%*s' $((20 - ${#health_status})) '')║${NC}"
+    # Calculate padding for score line (box width 32 inside borders)
+    local score_text="  HEALTH SCORE: ${score}/100"
+    local score_padding=$((32 - ${#score_text}))
+    printf "${color}║%s%*s║${NC}\n" "${score_text}" "${score_padding}" ""
+
+    # Calculate padding for status line
+    local status_text="  STATUS: ${health_status}"
+    local status_padding=$((32 - ${#status_text}))
+    printf "${color}║%s%*s║${NC}\n" "${status_text}" "${status_padding}" ""
     echo "${color}╚════════════════════════════════╝${NC}"
     echo ""
     
