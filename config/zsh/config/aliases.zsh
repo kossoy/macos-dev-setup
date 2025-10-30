@@ -98,7 +98,7 @@ alias show_hidden='defaults write com.apple.finder AppleShowAllFiles YES && kill
 alias hide_hidden='defaults write com.apple.finder AppleShowAllFiles NO && killall Finder'
 
 # LaunchAgent management
-alias la-status='$HOME/work/projects/personal/common/macos-dev-setup/scripts/launchagent-status.sh'
+alias la-status='$HOME/work/scripts/launchagent-status.sh'
 
 # =============================================================================
 # DOCKER ALIASES
