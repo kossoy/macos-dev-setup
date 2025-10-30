@@ -277,6 +277,112 @@ See the comprehensive **[Obsidian GitHub Sync Guide](obsidian-github-sync.md)** 
 - Version control and backup
 - Best practices and troubleshooting
 
+## Syncing This Documentation Vault
+
+This specific documentation vault (`macos-dev-setup`) is already set up as a Git repository. Here's how to keep it synced across devices.
+
+### Prerequisites
+
+- Obsidian installed on all devices
+- Git installed on all devices
+- GitHub CLI (`gh`) authenticated: `gh auth login`
+- SSH keys configured for GitHub (see [GitHub SSH Setup](github-ssh-setup.md))
+
+### Setting Up on a New Device
+
+#### 1. Clone the Repository
+
+```bash
+cd ~  # or your preferred location
+gh repo clone username/macos-dev-setup
+```
+
+#### 2. Install Obsidian Git Plugin
+
+1. Open Obsidian
+2. **Settings** → **Community plugins**
+3. Disable **Restricted mode** if enabled
+4. Click **Browse** and search for "Obsidian Git"
+5. Install and enable the plugin
+
+#### 3. Configure Obsidian Git Plugin
+
+Navigate to **Settings** → **Community plugins** → **Obsidian Git**:
+
+**Recommended Settings:**
+- ✅ **Disable push**: Off (you want to push changes)
+- ✅ **Pull updates on startup**: On
+- ✅ **Auto pull interval (minutes)**: 10
+- ✅ **Auto backup after file change**: On
+- ✅ **Auto backup interval (minutes)**: 5
+- ✅ **Commit message**: `vault backup: {{date}}`
+- ✅ **Sync method**: Commit, pull, push
+- ✅ **Pull before push**: On
+- ✅ **Show status bar**: On
+
+#### 4. Configure Git Author
+
+```bash
+cd ~/macos-dev-setup  # or wherever you cloned
+git config user.name "Your Name"
+git config user.email "your.email@example.com"
+```
+
+### Using the Plugin
+
+**Automatic Syncing:**
+- Changes are automatically backed up every 5 minutes
+- Vault pulls updates every 10 minutes
+- Changes are committed and pushed automatically
+
+**Manual Syncing:**
+- **Command Palette** (⌘P): Type "Git: Create backup"
+- **Status Bar**: Click the Git icon in the bottom right
+
+### Workflow Best Practices
+
+**Starting Your Day:**
+- Plugin auto-pulls when you open Obsidian
+
+**Working Normally:**
+- Just work as usual! Plugin auto-saves and auto-pushes
+
+**Switching Devices:**
+1. Open Obsidian on the new device
+2. Plugin auto-pulls latest changes
+3. Start working
+
+### Handling Conflicts
+
+If you edit the same file on multiple devices:
+1. Plugin shows a conflict notification
+2. Open the file with conflicts
+3. Manually resolve (choose which version to keep)
+4. Commit the resolved version
+
+**Prevention**: Work on different files on different devices, or always pull before starting.
+
+### Troubleshooting Sync Issues
+
+**Authentication Errors:**
+```bash
+# Ensure GitHub CLI is authenticated
+gh auth status
+
+# Or use SSH keys (see github-ssh-setup.md)
+```
+
+**Plugin Not Auto-Syncing:**
+1. Check plugin is enabled: **Settings** → **Community plugins**
+2. Verify auto backup is enabled in plugin settings
+3. Check status bar for error messages
+
+### Security Notes
+
+- This repository should be **private**
+- Use SSH keys for passwordless authentication
+- Never commit sensitive data (passwords, API keys)
+
 ## Plugins (Advanced)
 
 ### Recommended Community Plugins

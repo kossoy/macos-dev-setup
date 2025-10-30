@@ -101,12 +101,43 @@ myip                   # Get your public IP
 - Administrator access
 - Internet connection
 
+## Context Switching Explained
+
+The `work` and `personal` commands automatically switch:
+
+| Feature | Work Context | Personal Context |
+|---------|--------------|------------------|
+| **Git Config** | work@company.com | personal@email.com |
+| **GitHub CLI** | Work account | Personal account |
+| **Browser** | Chrome/Brave Work | Safari/Brave Personal |
+| **Database Port** | 5432 | 5433 |
+| **Working Dir** | ~/work/projects/work | ~/work/projects/personal |
+| **SSH Keys** | Work SSH key | Personal SSH key |
+
+## Directory Structure
+
+After installation, you'll have:
+
+```
+~/work/
+├── projects/
+│   ├── work/          # Work/Company projects
+│   └── personal/      # Personal projects
+├── scripts/           # Utility scripts
+├── configs/
+│   ├── work/          # Work-specific configs
+│   └── personal/      # Personal configs
+├── databases/         # Docker database configs
+├── docs/              # Documentation
+├── tools/             # Development tools
+└── bin/               # Custom binaries
+```
+
 ## Documentation
 
-- **Quick Start**: See `docs-quickstart/QUICKSTART.md`
-- **Backup Locations**: See `docs/BACKUP_LOCATIONS.md`
+- **Quick Reference**: See [reference/quick-reference.md](reference/quick-reference.md)
+- **Troubleshooting**: See [reference/troubleshooting.md](reference/troubleshooting.md)
 - **Testing Guide**: See `docs/TESTING.md`
-- **Full Setup Guides**: Clone the full docs repo after installation
 
 ---
 

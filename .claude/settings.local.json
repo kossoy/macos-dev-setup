@@ -49,15 +49,18 @@
       "WebSearch",
       "Bash(./clean.sh:*)",
       "Bash(cp:*)",
-      "Bash(go:*)",
-      "Bash(cat:*)",
       "Bash(zsh:*)",
+      "Bash(rm:*)",
+      "Bash(mkdir:*)",
       "Bash(command:*)",
+      "Bash(source:*)",
       "Bash(./build.sh:*)",
       "Bash(./up.sh)",
       "Bash(work)",
       "Bash(xattr:*)",
-      "Bash(defaultbrowser:*)"
+      "Bash(defaultbrowser:*)",
+      "Bash(/bin/rm:*)",
+      "Bash(rmdir:*)"
     ],
     "deny": [],
     "ask": []

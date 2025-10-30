@@ -22,6 +22,14 @@ alias .....='cd ../../../..'
 alias dir='open -a Forklift'
 alias downloads='open -a Forklift ~/Downloads'
 
+# Work directory navigation
+alias cdwork='cd "$HOME/work/projects/work"'
+alias cdpersonal='cd "$HOME/work/projects/personal"'
+alias cdconfig='cd "$HOME/work/configs"'
+alias cdscripts='cd "$HOME/work/scripts"'
+alias cdtools='cd "$HOME/work/tools"'
+alias cddocs='cd "$HOME/work/docs"'
+
 # =============================================================================
 # NETWORK ALIASES
 # =============================================================================
