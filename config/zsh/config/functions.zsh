@@ -673,36 +673,28 @@ show-context() {
         echo ""
     fi
 
-    # Default browser
+    # Browser
     echo "🌐 Browser:"
-    local expected_browser=""
-    if [[ "$context_type" == "work" ]]; then
-        expected_browser="${WORK_BROWSER:-browser}"
-    elif [[ "$context_type" == "personal" ]]; then
-        expected_browser="${PERSONAL_BROWSER:-beta}"
-    fi
+    if command -v python3 >/dev/null 2>&1; then
+        local browser_id=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', 'Not set'))" 2>/dev/null)
 
-    if [[ -n "$expected_browser" ]]; then
-        # Map shorthand to full names
-        local browser_name="$expected_browser"
-        case "$expected_browser" in
-            browser) browser_name="Brave Browser (com.brave.browser)" ;;
-            beta) browser_name="Brave Browser Beta (com.brave.browser.beta)" ;;
-            chrome) browser_name="Google Chrome (com.google.chrome)" ;;
-            safari) browser_name="Safari (com.apple.safari)" ;;
-            firefox) browser_name="Firefox (org.mozilla.firefox)" ;;
+        # Map bundle ID to friendly name
+        local browser_name="$browser_id"
+        case "$browser_id" in
+            com.brave.browser) browser_name="Brave Browser" ;;
+            com.brave.browser.beta) browser_name="Brave Browser Beta" ;;
+            com.google.chrome) browser_name="Google Chrome" ;;
+            com.apple.safari) browser_name="Safari" ;;
+            org.mozilla.firefox) browser_name="Firefox" ;;
         esac
-        echo "   Expected: ${green}${browser_name}${reset}"
 
-        # Check actual system setting
-        if command -v python3 >/dev/null 2>&1; then
-            local actual_browser_id=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', 'Not set'))" 2>/dev/null)
-            if [[ -n "$actual_browser_id" ]]; then
-                echo "   Actual:   ${blue}${actual_browser_id}${reset}"
-            fi
+        if [[ -n "$browser_id" ]] && [[ "$browser_id" != "Not set" ]]; then
+            echo "   ${green}${browser_name}${reset}"
+        else
+            echo "   ${yellow}Not set${reset}"
         fi
     else
-        echo "   ${yellow}Not configured${reset}"
+        echo "   ${yellow}Cannot detect${reset}"
     fi
     echo ""
 
