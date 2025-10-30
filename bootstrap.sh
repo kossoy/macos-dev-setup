@@ -190,6 +190,48 @@ collect_user_info() {
     echo ""
 }
 
+# Function to create work/personal configuration file
+create_work_personal_config() {
+    print_status "Creating work/personal configuration..."
+
+    # Create config directory
+    mkdir -p ~/.config/zsh/private
+
+    # Create the config file with user's inputs
+    cat > ~/.config/zsh/private/work-personal-config.zsh << EOF
+#!/bin/zsh
+# =============================================================================
+# WORK/PERSONAL CONFIGURATION
+# =============================================================================
+# Private configuration for context switching
+# This file is gitignored and contains user-specific settings
+# =============================================================================
+
+# Git email addresses
+export WORK_GIT_EMAIL="${WORK_EMAIL}"
+export PERSONAL_GIT_EMAIL="${PERSONAL_EMAIL}"
+
+# GitHub usernames (for verification)
+export WORK_GH_USER="${WORK_GITHUB_USER}"
+export PERSONAL_GH_USER="${PERSONAL_GITHUB_USER}"
+
+# GitHub hosts
+export WORK_GITHUB_HOST="github.com"           # Default, change if using GitHub Enterprise
+export PERSONAL_GITHUB_HOST="github.com"
+
+# Work context identifiers (collected during setup)
+export WORK_ORG="${WORK_CONTEXT}"              # Internal identifier
+export WORK_CONTEXT_NAME="${WORK_CONTEXT}"     # Display name (human-readable)
+
+# Personal context identifiers (collected during setup)
+export PERSONAL_ORG="${PERSONAL_CONTEXT}"      # Internal identifier
+export PERSONAL_CONTEXT_NAME="${PERSONAL_CONTEXT}" # Display name (human-readable)
+EOF
+
+    chmod 600 ~/.config/zsh/private/work-personal-config.zsh
+    print_success "Work/personal configuration created at ~/.config/zsh/private/work-personal-config.zsh"
+}
+
 # Function to select installation mode
 select_installation_mode() {
     print_header "⚙️  Installation Mode Selection"
@@ -451,7 +493,10 @@ main() {
     
     # Collect user information
     collect_user_info
-    
+
+    # Create work/personal configuration
+    create_work_personal_config
+
     # Select installation mode
     select_installation_mode
     

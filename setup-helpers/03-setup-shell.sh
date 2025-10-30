@@ -149,6 +149,9 @@ source $ZSH/oh-my-zsh.sh
 # Load custom configuration
 ZSH_CONFIG_DIR="$HOME/.config/zsh/config"
 
+# Load work/personal configuration (private, not in git)
+[[ -f "$HOME/.config/zsh/private/work-personal-config.zsh" ]] && source "$HOME/.config/zsh/private/work-personal-config.zsh"
+
 [[ -f "$ZSH_CONFIG_DIR/paths.zsh" ]] && source "$ZSH_CONFIG_DIR/paths.zsh"
 [[ -f "$ZSH_CONFIG_DIR/aliases.zsh" ]] && source "$ZSH_CONFIG_DIR/aliases.zsh"
 [[ -f "$ZSH_CONFIG_DIR/functions.zsh" ]] && source "$ZSH_CONFIG_DIR/functions.zsh"
