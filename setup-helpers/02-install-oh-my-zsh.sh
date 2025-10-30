@@ -75,6 +75,16 @@ else
     print_success "Oh My Zsh installed"
 fi
 
+# Patch Oh My Zsh upgrade.sh to fix "local: can only be used in a function" error
+if [[ -f "$HOME/.oh-my-zsh/tools/upgrade.sh" ]]; then
+    if grep -q "^local ret=0" "$HOME/.oh-my-zsh/tools/upgrade.sh" 2>/dev/null; then
+        print_status "Patching Oh My Zsh upgrade.sh..."
+        # Fix line 4 and line 228 where 'local ret=0' appears outside functions
+        sed -i.bak 's/^local ret=0/ret=0/' "$HOME/.oh-my-zsh/tools/upgrade.sh"
+        print_success "Patched upgrade.sh to fix script-level 'local' declarations"
+    fi
+fi
+
 # Define plugin/theme locations
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 PLUGINS_DIR="$ZSH_CUSTOM/plugins"
