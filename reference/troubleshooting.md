@@ -4,6 +4,31 @@ Common issues and their solutions for the macOS development environment.
 
 ## General Issues
 
+### Setup Script Hangs at Sensitive Files Restoration
+
+**Problem**: Setup script hangs at "Looking for API keys..." during sensitive files restoration step.
+
+**Root Cause**: The Time Machine backup search (`find /Volumes`) can hang indefinitely when scanning slow or unresponsive network volumes.
+
+**Solutions**:
+
+```bash
+# The fix has been applied to setup-helpers/08-restore-sensitive.sh
+# The script now includes:
+# - 5-second timeout for Time Machine backup search
+# - Limited search depth to prevent deep recursion
+# - Automatic skip of slow network volumes
+
+# If you encounter this issue, update your repository:
+cd ~/macos-dev-setup
+git pull origin main
+
+# Or manually edit setup-helpers/08-restore-sensitive.sh
+# The Time Machine search now uses a background process with timeout
+```
+
+**Details**: The script now searches for Time Machine backups with a 5-second timeout. If the search times out (due to slow network volumes), it will skip that step and continue with the restoration process. This prevents the setup from hanging indefinitely.
+
 ### Permission Errors
 
 **Problem**: `Permission denied` errors when installing packages or running commands.
@@ -612,4 +637,4 @@ bash -x ~/work/scripts/<script-name>.sh
 4. System info: `uname -a`, `sw_vers`
 5. Relevant logs
 
-**Last Updated**: October 5, 2025
+**Last Updated**: December 19, 2024

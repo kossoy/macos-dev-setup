@@ -49,16 +49,32 @@ echo "🔑 Looking for API keys..."
 # Check common backup locations for API keys
 API_KEY_LOCATIONS=(
     "$HOME/.zsh/private/api-keys.zsh"
-    "$HOME/.zsh/private/api-keys.zsh"
     "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Backups/zsh-config/api-keys.zsh"
     "$HOME/work/backups/zsh-complete-environment-*.tar.gz"
 )
 
-# Check Time Machine backups
-TM_BACKUPS=$(find /Volumes -name "Backups.backupdb" 2>/dev/null | head -1)
-if [[ -n "$TM_BACKUPS" ]]; then
+# Check Time Machine backups (with timeout to prevent hanging on network volumes)
+echo "🔍 Checking for Time Machine backups..."
+# Use a temp file and background process with timeout to prevent hanging
+TMPFILE=$(mktemp)
+(
+    find /Volumes -maxdepth 2 -name "Backups.backupdb" -type d 2>/dev/null | head -1 > "$TMPFILE"
+) &
+FIND_PID=$!
+# Kill the find process after 5 seconds if it's still running
+(sleep 5 && kill $FIND_PID 2>/dev/null) &
+KILLER_PID=$!
+wait $FIND_PID 2>/dev/null
+kill $KILLER_PID 2>/dev/null
+TM_BACKUPS=$(cat "$TMPFILE" 2>/dev/null)
+rm -f "$TMPFILE"
+
+if [[ -n "$TM_BACKUPS" && -d "$TM_BACKUPS" ]]; then
     TM_USER_BACKUP="$TM_BACKUPS/$(whoami)/Latest/Users/$(whoami)/.zsh/private/api-keys.zsh"
     API_KEY_LOCATIONS+=("$TM_USER_BACKUP")
+    echo "✅ Found Time Machine backup location"
+else
+    echo "ℹ️  No Time Machine backup found (skipped slow network volumes)"
 fi
 
 echo "🔍 Checking for API keys in common locations..."
