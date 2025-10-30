@@ -1,0 +1,27 @@
+#!/bin/zsh
+# =============================================================================
+# WORK/PERSONAL CONFIGURATION TEMPLATE
+# =============================================================================
+# Copy this file to ~/.config/zsh/private/work-personal-config.zsh
+# and fill in your actual values
+# =============================================================================
+
+# Git email addresses
+export WORK_GIT_EMAIL="your.work@company.com"
+export PERSONAL_GIT_EMAIL="your.personal@email.com"
+
+# GitHub usernames (for verification)
+export WORK_GH_USER="your-work-github-username"
+export PERSONAL_GH_USER="your-personal-github-username"
+
+# GitHub hosts
+export WORK_GITHUB_HOST="github.com"           # Or github.yourcompany.com for Enterprise
+export PERSONAL_GITHUB_HOST="github.com"
+
+# Work context identifiers (collected during setup)
+export WORK_ORG="YOUR_COMPANY_ORG"             # Internal identifier
+export WORK_CONTEXT_NAME="Your Company"        # Display name (human-readable)
+
+# Personal context identifiers (collected during setup)
+export PERSONAL_ORG="PERSONAL_ORG"             # Internal identifier
+export PERSONAL_CONTEXT_NAME="Personal"        # Display name (human-readable)
