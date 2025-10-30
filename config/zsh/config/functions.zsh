@@ -330,6 +330,41 @@ list_functions() {
 # CONTEXT SWITCHING
 # =============================================================================
 
+# Helper function: Get default browser with retry logic to avoid race conditions
+_get_default_browser() {
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo ""  # Return empty if Python3 not available
+        return 1
+    fi
+
+    python3 <<'EOF'
+import plistlib
+import os
+import time
+
+for attempt in range(3):
+    try:
+        plist_path = os.path.expanduser(
+            '~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'
+        )
+        with open(plist_path, 'rb') as f:
+            plist = plistlib.load(f)
+
+        handlers = plist.get('LSHandlers', [])
+        http_handler = next(
+            (h for h in handlers if h.get('LSHandlerURLScheme') == 'http'),
+            {}
+        )
+        print(http_handler.get('LSHandlerRoleAll', ''))
+        break
+    except Exception:
+        if attempt < 2:
+            time.sleep(0.1)
+        else:
+            print('')  # Empty string on final failure
+EOF
+}
+
 # Switch to work context
 work() {
     local green=$(tput setaf 2 2>/dev/null)
@@ -357,22 +392,55 @@ work() {
 
     # Update Git config
     if [[ -n "$work_email" ]]; then
-        git config --global user.email "$work_email"
-        echo "   ✅ Git email: ${green}${work_email}${reset}"
+        if git config --global user.email "$work_email" 2>/dev/null; then
+            local actual_email=$(git config --global user.email 2>/dev/null)
+            if [[ "$actual_email" == "$work_email" ]]; then
+                echo "   ✅ Git email: ${green}${work_email}${reset}"
+            else
+                echo "   ${yellow}⚠️  Git email may not have been set correctly${reset}" >&2
+            fi
+        else
+            echo "   ${red}❌ Failed to set Git email${reset}" >&2
+            echo "   💡 Check if git is installed and configured" >&2
+        fi
     else
         echo "   ${yellow}⚠️  Could not determine work email${reset}" >&2
     fi
 
     # SSH key management
     echo "   🔑 Managing SSH keys..."
+
     # Ensure personal key is loaded
-    ssh-add -q "$HOME/.ssh/id_ed25519" 2>/dev/null
+    if [[ -f "$HOME/.ssh/id_ed25519" ]]; then
+        # Check if already loaded
+        if ! ssh-add -l 2>/dev/null | grep -q "id_ed25519"; then
+            if ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null; then
+                echo "   ✅ Personal SSH key loaded"
+            else
+                echo "   ${red}❌ Failed to load personal SSH key${reset}" >&2
+                echo "   💡 Try: ssh-add $HOME/.ssh/id_ed25519" >&2
+            fi
+        else
+            echo "   ✅ Personal SSH key already loaded"
+        fi
+    else
+        echo "   ${yellow}⚠️  Personal SSH key not found: $HOME/.ssh/id_ed25519${reset}" >&2
+    fi
+
     # Load work key
     if [[ -f "$HOME/.ssh/id_ed25519_concur" ]]; then
-        ssh-add -q "$HOME/.ssh/id_ed25519_concur" 2>/dev/null
-        echo "   ✅ Work SSH key loaded"
+        if ! ssh-add -l 2>/dev/null | grep -q "id_ed25519_concur"; then
+            if ssh-add "$HOME/.ssh/id_ed25519_concur" 2>/dev/null; then
+                echo "   ✅ Work SSH key loaded"
+            else
+                echo "   ${red}❌ Failed to load work SSH key${reset}" >&2
+                echo "   💡 Try: ssh-add $HOME/.ssh/id_ed25519_concur" >&2
+            fi
+        else
+            echo "   ✅ Work SSH key already loaded"
+        fi
     else
-        echo "   ${yellow}⚠️  Work SSH key not found${reset}" >&2
+        echo "   ${yellow}⚠️  Work SSH key not found: $HOME/.ssh/id_ed25519_concur${reset}" >&2
     fi
 
     # Browser switching
@@ -380,7 +448,7 @@ work() {
         local work_browser="${WORK_BROWSER:-browser}"
 
         # Get current browser before switch
-        local current_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+        local current_browser=$(_get_default_browser 2>/dev/null)
 
         # Map work_browser shorthand to bundle ID
         local expected_bundle_id=""
@@ -401,7 +469,7 @@ work() {
             defaultbrowser "$work_browser" 2>/dev/null
             echo "   💡 A system alert should appear asking to confirm the browser change"
             echo -n "   Press Enter after confirming (or canceling) the browser change..."
-            read
+            read -t 30 || echo "${yellow}\n   ⚠️  Timeout waiting for input${reset}" >&2
 
             # Poll for browser change (max 10 seconds)
             echo "   ⏳ Waiting for system to update browser settings..."
@@ -409,7 +477,7 @@ work() {
             local attempt=0
             while [[ $attempt -lt $max_attempts ]]; do
                 sleep 0.5
-                local new_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+                local new_browser=$(_get_default_browser 2>/dev/null)
 
                 # Check if browser now matches expected
                 if [[ "$new_browser" == "$expected_bundle_id" ]]; then
@@ -433,15 +501,18 @@ work() {
     if [[ "$gh_host" != "github.com" ]]; then
         echo ""
         echo "   🔍 Checking connectivity to ${green}${gh_host}${reset}..."
-        if ! curl -s -o /dev/null --max-time 3 "https://$gh_host" 2>/dev/null; then
+        if ! curl -s -o /dev/null --max-time 3 -f "https://$gh_host/api/v3" 2>/dev/null; then
             echo "   ${yellow}⚠️  Cannot reach $gh_host${reset}"
             echo "   💡 Please connect to GlobalProtect VPN"
             echo -n "   Press Enter after connecting to VPN (or Ctrl+C to skip)..."
-            read
+            if ! read -t 300; then  # 5 minute timeout for VPN connection
+                echo ""
+                echo "   ${yellow}⚠️  Timeout waiting for VPN connection${reset}" >&2
+            fi
             echo ""
 
             # Re-check connectivity
-            if curl -s -o /dev/null --max-time 3 "https://$gh_host" 2>/dev/null; then
+            if curl -s -o /dev/null --max-time 3 -f "https://$gh_host/api/v3" 2>/dev/null; then
                 echo "   ✅ Connected to $gh_host"
             else
                 echo "   ${yellow}⚠️  Still cannot reach $gh_host - skipping GitHub CLI check${reset}" >&2
@@ -476,10 +547,13 @@ work() {
         fi
     fi
 
-    # Write context file
+    # Write context file (atomic write with validation)
     local context_file="$HOME/.config/zsh/contexts/current.zsh"
+    local temp_file="${context_file}.tmp.$$"
     mkdir -p "$(dirname "$context_file")"
-    cat > "$context_file" <<EOF
+
+    # Write to temporary file first
+    cat > "$temp_file" <<EOF
 #!/bin/zsh
 # Current development context (auto-generated by work() function)
 export WORK_CONTEXT="${WORK_CONTEXT}"
@@ -490,6 +564,16 @@ export DB_PORT="${DB_PORT}"
 export DB_NAME="${DB_NAME}"
 export DB_USER="${DB_USER}"
 EOF
+
+    # Validate and atomically move
+    if [[ -s "$temp_file" ]] && grep -q "WORK_CONTEXT" "$temp_file"; then
+        chmod 600 "$temp_file"
+        mv "$temp_file" "$context_file"
+    else
+        echo "   ${red}❌ Failed to create context file${reset}" >&2
+        rm -f "$temp_file"
+        return 1
+    fi
 
     # Change to work projects directory
     if [[ -d "$PROJECT_ROOT" ]]; then
@@ -533,21 +617,49 @@ personal() {
 
     # Update Git config
     if [[ -n "$personal_email" ]]; then
-        git config --global user.email "$personal_email"
-        echo "   ✅ Git email: ${green}${personal_email}${reset}"
+        if git config --global user.email "$personal_email" 2>/dev/null; then
+            local actual_email=$(git config --global user.email 2>/dev/null)
+            if [[ "$actual_email" == "$personal_email" ]]; then
+                echo "   ✅ Git email: ${green}${personal_email}${reset}"
+            else
+                echo "   ${yellow}⚠️  Git email may not have been set correctly${reset}" >&2
+            fi
+        else
+            echo "   ${red}❌ Failed to set Git email${reset}" >&2
+            echo "   💡 Check if git is installed and configured" >&2
+        fi
     else
         echo "   ${yellow}⚠️  Could not determine personal email${reset}" >&2
     fi
 
     # SSH key management
     echo "   🔑 Managing SSH keys..."
-    # Ensure personal key is loaded
-    ssh-add -q "$HOME/.ssh/id_ed25519" 2>/dev/null
-    echo "   ✅ Personal SSH key loaded"
-    # UNLOAD work key
+
+    # UNLOAD work key first (before loading personal)
     if [[ -f "$HOME/.ssh/id_ed25519_concur" ]]; then
-        ssh-add -d "$HOME/.ssh/id_ed25519_concur" 2>/dev/null
-        echo "   ✅ Work SSH key unloaded"
+        if ssh-add -l 2>/dev/null | grep -q "id_ed25519_concur"; then
+            if ssh-add -d "$HOME/.ssh/id_ed25519_concur" 2>/dev/null; then
+                echo "   ✅ Work SSH key unloaded"
+            else
+                echo "   ${yellow}⚠️  Could not unload work SSH key${reset}" >&2
+            fi
+        fi
+    fi
+
+    # Ensure personal key is loaded
+    if [[ -f "$HOME/.ssh/id_ed25519" ]]; then
+        if ! ssh-add -l 2>/dev/null | grep -q "id_ed25519"; then
+            if ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null; then
+                echo "   ✅ Personal SSH key loaded"
+            else
+                echo "   ${red}❌ Failed to load personal SSH key${reset}" >&2
+                echo "   💡 Try: ssh-add $HOME/.ssh/id_ed25519" >&2
+            fi
+        else
+            echo "   ✅ Personal SSH key already loaded"
+        fi
+    else
+        echo "   ${yellow}⚠️  Personal SSH key not found: $HOME/.ssh/id_ed25519${reset}" >&2
     fi
 
     # Browser switching
@@ -555,7 +667,7 @@ personal() {
         local personal_browser="${PERSONAL_BROWSER:-beta}"
 
         # Get current browser before switch
-        local current_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+        local current_browser=$(_get_default_browser 2>/dev/null)
 
         # Map personal_browser shorthand to bundle ID
         local expected_bundle_id=""
@@ -576,7 +688,7 @@ personal() {
             defaultbrowser "$personal_browser" 2>/dev/null
             echo "   💡 A system alert should appear asking to confirm the browser change"
             echo -n "   Press Enter after confirming (or canceling) the browser change..."
-            read
+            read -t 30 || echo "${yellow}\n   ⚠️  Timeout waiting for input${reset}" >&2
 
             # Poll for browser change (max 10 seconds)
             echo "   ⏳ Waiting for system to update browser settings..."
@@ -584,7 +696,7 @@ personal() {
             local attempt=0
             while [[ $attempt -lt $max_attempts ]]; do
                 sleep 0.5
-                local new_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+                local new_browser=$(_get_default_browser 2>/dev/null)
 
                 # Check if browser now matches expected
                 if [[ "$new_browser" == "$expected_bundle_id" ]]; then
@@ -607,16 +719,10 @@ personal() {
         echo ""
         echo "   🔍 Checking GitHub CLI authentication..."
 
-        # Check connectivity first
+        # Check connectivity first (test GitHub API endpoint)
         local is_reachable=false
-        if [[ "$gh_host" == "github.com" ]]; then
-            if ping -c 1 -W 1 "$gh_host" >/dev/null 2>&1; then
-                is_reachable=true
-            fi
-        else
-            if curl -s -o /dev/null --max-time 2 "https://$gh_host" 2>/dev/null; then
-                is_reachable=true
-            fi
+        if curl -s -o /dev/null --max-time 2 -f "https://$gh_host/api/v3" 2>/dev/null; then
+            is_reachable=true
         fi
 
         if [[ "$is_reachable" == "true" ]]; then
@@ -643,10 +749,13 @@ personal() {
         fi
     fi
 
-    # Write context file
+    # Write context file (atomic write with validation)
     local context_file="$HOME/.config/zsh/contexts/current.zsh"
+    local temp_file="${context_file}.tmp.$$"
     mkdir -p "$(dirname "$context_file")"
-    cat > "$context_file" <<EOF
+
+    # Write to temporary file first
+    cat > "$temp_file" <<EOF
 #!/bin/zsh
 # Current development context (auto-generated by personal() function)
 export WORK_CONTEXT="${WORK_CONTEXT}"
@@ -657,6 +766,16 @@ export DB_PORT="${DB_PORT}"
 export DB_NAME="${DB_NAME}"
 export DB_USER="${DB_USER}"
 EOF
+
+    # Validate and atomically move
+    if [[ -s "$temp_file" ]] && grep -q "WORK_CONTEXT" "$temp_file"; then
+        chmod 600 "$temp_file"
+        mv "$temp_file" "$context_file"
+    else
+        echo "   ${red}❌ Failed to create context file${reset}" >&2
+        rm -f "$temp_file"
+        return 1
+    fi
 
     # Change to personal projects directory
     if [[ -d "$PROJECT_ROOT" ]]; then
@@ -762,7 +881,8 @@ show-context() {
     # Browser
     echo "🌐 Browser:"
     if command -v python3 >/dev/null 2>&1; then
-        local browser_id=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', 'Not set'))" 2>/dev/null)
+        local browser_id=$(_get_default_browser 2>/dev/null)
+        [[ -z "$browser_id" ]] && browser_id="Not set"
 
         # Map bundle ID to friendly name
         local browser_name="$browser_id"

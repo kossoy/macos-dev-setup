@@ -50,6 +50,7 @@
       "Bash(./clean.sh:*)",
       "Bash(cp:*)",
       "Bash(zsh:*)",
+      "Bash(source:*)",
       "Bash(command:*)",
       "Bash(./build.sh:*)",
       "Bash(./up.sh)",
