@@ -48,7 +48,9 @@
       "WebSearch",
       "Bash(./clean.sh:*)",
       "Bash(./build.sh:*)",
-      "Bash(./up.sh)"
+      "Bash(./up.sh)",
+      "Bash(work)",
+      "Bash(xattr:*)"
     ],
     "deny": [],
     "ask": []
