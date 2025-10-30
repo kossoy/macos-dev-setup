@@ -150,38 +150,60 @@ collect_user_info() {
     # GitHub usernames
     read -p "Enter work GitHub username: " WORK_GITHUB_USER
     read -p "Enter personal GitHub username: " PERSONAL_GITHUB_USER
-    
-    # Browser preferences
-    echo "Browser preferences:"
-    echo "1) Chrome for work, Safari for personal (recommended)"
-    echo "2) Chrome for work, Firefox for personal"
-    echo "3) Edge for work, Brave for personal"
-    echo "4) Custom"
-    read -p "Choose option (1-4): " -n 1 -r
+
+    # Detect installed browsers
     echo ""
-    
-    case $REPLY in
-        1)
-            WORK_BROWSER="chrome"
-            PERSONAL_BROWSER="safari"
-            ;;
-        2)
-            WORK_BROWSER="chrome"
-            PERSONAL_BROWSER="firefox"
-            ;;
-        3)
-            WORK_BROWSER="edge"
-            PERSONAL_BROWSER="brave"
-            ;;
-        4)
-            read -p "Enter work browser (chrome/safari/firefox/edge/brave/arc): " WORK_BROWSER
-            read -p "Enter personal browser (chrome/safari/firefox/edge/brave/arc): " PERSONAL_BROWSER
-            ;;
-        *)
-            WORK_BROWSER="chrome"
-            PERSONAL_BROWSER="safari"
-            ;;
-    esac
+    print_status "Detecting installed browsers..."
+
+    # Get list of available browsers from defaultbrowser
+    if command -v defaultbrowser >/dev/null 2>&1; then
+        AVAILABLE_BROWSERS=$(defaultbrowser 2>&1 | sed 's/^[* ]*//' | grep -v "^$")
+    else
+        # Fallback if defaultbrowser not installed
+        AVAILABLE_BROWSERS="safari chrome firefox edge browser"
+    fi
+
+    # Function to map browser ID to friendly name
+    get_browser_name() {
+        case "$1" in
+            safari) echo "Safari" ;;
+            chrome) echo "Google Chrome" ;;
+            firefox) echo "Firefox" ;;
+            edge) echo "Microsoft Edge" ;;
+            browser) echo "Brave Browser" ;;
+            beta) echo "Brave Browser Beta" ;;
+            arc) echo "Arc" ;;
+            chromium) echo "Chromium" ;;
+            opera) echo "Opera" ;;
+            *) echo "$1" ;;
+        esac
+    }
+
+    # Display installed browsers
+    echo "Installed browsers:"
+    local index=1
+    while IFS= read -r browser_id; do
+        # Skip non-browser items
+        if [[ "$browser_id" =~ ^(safari|chrome|firefox|edge|browser|beta|arc|chromium|opera)$ ]]; then
+            local browser_name=$(get_browser_name "$browser_id")
+            echo "  $index) $browser_name ($browser_id)"
+            ((index++))
+        fi
+    done <<< "$AVAILABLE_BROWSERS"
+
+    # Browser preferences
+    echo ""
+    echo "Browser preferences:"
+    read -p "Enter work browser identifier (e.g., browser, chrome, safari): " WORK_BROWSER
+    read -p "Enter personal browser identifier (e.g., beta, firefox, arc): " PERSONAL_BROWSER
+
+    # Validate browser choices
+    if ! echo "$AVAILABLE_BROWSERS" | grep -q "^${WORK_BROWSER}$"; then
+        print_warning "Work browser '$WORK_BROWSER' not detected, but will use it anyway"
+    fi
+    if ! echo "$AVAILABLE_BROWSERS" | grep -q "^${PERSONAL_BROWSER}$"; then
+        print_warning "Personal browser '$PERSONAL_BROWSER' not detected, but will use it anyway"
+    fi
     
     # VPN portal (optional)
     read -p "Enter VPN portal address (optional, press Enter to skip): " VPN_PORTAL
@@ -226,6 +248,10 @@ export WORK_CONTEXT_NAME="${WORK_CONTEXT}"     # Display name (human-readable)
 # Personal context identifiers (collected during setup)
 export PERSONAL_ORG="${PERSONAL_CONTEXT}"      # Internal identifier
 export PERSONAL_CONTEXT_NAME="${PERSONAL_CONTEXT}" # Display name (human-readable)
+
+# Browser preferences (defaultbrowser identifiers)
+export WORK_BROWSER="${WORK_BROWSER}"          # e.g., "browser", "chrome", "safari"
+export PERSONAL_BROWSER="${PERSONAL_BROWSER}"  # e.g., "beta", "firefox", "arc"
 EOF
 
     chmod 600 ~/.config/zsh/private/work-personal-config.zsh

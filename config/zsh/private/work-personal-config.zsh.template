@@ -25,3 +25,8 @@ export WORK_CONTEXT_NAME="Your Company"        # Display name (e.g., "Acme Corp"
 # Personal context identifiers (collected during setup)
 export PERSONAL_ORG="PERSONAL_ORG"             # Internal identifier (e.g., "MyStartup", "BeFeast")
 export PERSONAL_CONTEXT_NAME="Personal"        # Display name (e.g., "My Startup", "BeFeast")
+
+# Browser preferences (defaultbrowser identifiers)
+# Run 'defaultbrowser' to see available browser identifiers on your system
+export WORK_BROWSER="browser"                  # e.g., "browser" (Brave), "chrome", "safari"
+export PERSONAL_BROWSER="beta"                 # e.g., "beta" (Brave Beta), "firefox", "arc"

@@ -54,7 +54,8 @@
       "Bash(./build.sh:*)",
       "Bash(./up.sh)",
       "Bash(work)",
-      "Bash(xattr:*)"
+      "Bash(xattr:*)",
+      "Bash(defaultbrowser:*)"
     ],
     "deny": [],
     "ask": []
