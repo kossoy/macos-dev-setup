@@ -53,19 +53,19 @@ status_icon() {
     local state="$1"
     case $state in
         "ok"|"success"|"good")
-            echo "${GREEN}✅  ${NC}"
+            echo "${GREEN}[✓]${NC}"
             ;;
         "warning"|"caution")
-            echo "${YELLOW}⚠️  ${NC}"
+            echo "${YELLOW}[!]${NC}"
             ;;
         "error"|"critical"|"fail")
-            echo "${RED}❌  ${NC}"
+            echo "${RED}[✗]${NC}"
             ;;
         "info")
-            echo "${BLUE}ℹ️  ${NC}"
+            echo "${BLUE}[i]${NC}"
             ;;
         *)
-            echo "•  "
+            echo "[·]"
             ;;
     esac
 }
