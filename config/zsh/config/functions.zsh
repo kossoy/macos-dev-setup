@@ -383,6 +383,8 @@ work() {
         echo "   💡 A system alert should appear asking to confirm the browser change"
         echo -n "   Press Enter after confirming the browser change..."
         read
+        echo "   ⏳ Waiting for system to update browser settings..."
+        sleep 3
         echo "   ✅ Browser switch confirmed"
     fi
 
@@ -518,6 +520,8 @@ personal() {
         echo "   💡 A system alert should appear asking to confirm the browser change"
         echo -n "   Press Enter after confirming the browser change..."
         read
+        echo "   ⏳ Waiting for system to update browser settings..."
+        sleep 3
         echo "   ✅ Browser switch confirmed"
     fi
 
