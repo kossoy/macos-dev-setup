@@ -378,9 +378,12 @@ work() {
     # Browser switching
     if command -v defaultbrowser >/dev/null 2>&1; then
         local work_browser="${WORK_BROWSER:-browser}"
+        echo "   🌐 Switching default browser..."
         defaultbrowser "$work_browser" 2>/dev/null
-        echo "   ✅ Default browser recommendation: $work_browser"
-        echo "   💡 You may need to confirm the browser change in System Settings"
+        echo "   💡 A system alert should appear asking to confirm the browser change"
+        echo -n "   Press Enter after confirming the browser change..."
+        read
+        echo "   ✅ Browser switch confirmed"
     fi
 
     # VPN connectivity check for GitHub Enterprise
@@ -510,9 +513,12 @@ personal() {
     # Browser switching
     if command -v defaultbrowser >/dev/null 2>&1; then
         local personal_browser="${PERSONAL_BROWSER:-beta}"
+        echo "   🌐 Switching default browser..."
         defaultbrowser "$personal_browser" 2>/dev/null
-        echo "   ✅ Default browser recommendation: $personal_browser"
-        echo "   💡 You may need to confirm the browser change in System Settings"
+        echo "   💡 A system alert should appear asking to confirm the browser change"
+        echo -n "   Press Enter after confirming the browser change..."
+        read
+        echo "   ✅ Browser switch confirmed"
     fi
 
     # GitHub CLI verification
