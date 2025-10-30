@@ -501,7 +501,7 @@ work() {
     if [[ "$gh_host" != "github.com" ]]; then
         echo ""
         echo "   🔍 Checking connectivity to ${green}${gh_host}${reset}..."
-        if ! curl -s -o /dev/null --max-time 3 -f "https://$gh_host/api/v3" 2>/dev/null; then
+        if ! curl -s -o /dev/null --max-time 3 "https://$gh_host/api/v3" 2>/dev/null; then
             echo "   ${yellow}⚠️  Cannot reach $gh_host${reset}"
             echo "   💡 Please connect to GlobalProtect VPN"
             echo -n "   Press Enter after connecting to VPN (or Ctrl+C to skip)..."
@@ -512,7 +512,7 @@ work() {
             echo ""
 
             # Re-check connectivity
-            if curl -s -o /dev/null --max-time 3 -f "https://$gh_host/api/v3" 2>/dev/null; then
+            if curl -s -o /dev/null --max-time 3 "https://$gh_host/api/v3" 2>/dev/null; then
                 echo "   ✅ Connected to $gh_host"
             else
                 echo "   ${yellow}⚠️  Still cannot reach $gh_host - skipping GitHub CLI check${reset}" >&2
@@ -568,7 +568,7 @@ EOF
     # Validate and atomically move
     if [[ -s "$temp_file" ]] && grep -q "WORK_CONTEXT" "$temp_file"; then
         chmod 600 "$temp_file"
-        mv "$temp_file" "$context_file"
+        mv -f "$temp_file" "$context_file"
     else
         echo "   ${red}❌ Failed to create context file${reset}" >&2
         rm -f "$temp_file"
@@ -721,7 +721,7 @@ personal() {
 
         # Check connectivity first (test GitHub API endpoint)
         local is_reachable=false
-        if curl -s -o /dev/null --max-time 2 -f "https://$gh_host/api/v3" 2>/dev/null; then
+        if curl -s -o /dev/null --max-time 2 "https://$gh_host/api/v3" 2>/dev/null; then
             is_reachable=true
         fi
 
@@ -770,7 +770,7 @@ EOF
     # Validate and atomically move
     if [[ -s "$temp_file" ]] && grep -q "WORK_CONTEXT" "$temp_file"; then
         chmod 600 "$temp_file"
-        mv "$temp_file" "$context_file"
+        mv -f "$temp_file" "$context_file"
     else
         echo "   ${red}❌ Failed to create context file${reset}" >&2
         rm -f "$temp_file"
