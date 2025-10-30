@@ -113,47 +113,25 @@ main() {
     local du_numeric_output
     local max_size_cmd
 
-    # Use fd if available (much faster), otherwise fall back to du
-    if command -v fd >/dev/null 2>&1 && [[ "$max_depth" -eq 1 ]]; then
-        # Use fd to list immediate children only, then du each one
-        set +o pipefail
-        local items
-        items=$(fd -d 1 -H --exclude .git . 2>/dev/null | grep -v '^\.$')
-        if [[ -n "$items" ]]; then
-            # Get numeric sizes only, sorted by size
-            du_numeric_output=$(echo "$items" | xargs -I {} du -s "{}" 2>/dev/null | sort -rn | head -n "$list_length")
-            # Convert to human-readable format (using awk)
-            # Note: du -s outputs in KB (512-byte blocks * 2 = KB on macOS)
-            du_output=$(echo "$du_numeric_output" | awk 'BEGIN {FS="\t"; OFS="\t"} {
-                size = $1
-                item = $2
+    # Use du to get all items (no filtering - shows everything including venv/, node_modules/, .git/, etc.)
+    # Use 'command du' to bypass any shell alias (like 'du -h')
+    # Note: -s (summary) with glob patterns ./* and ./.[!.]* already gives immediate children only
+    # Disable pipefail temporarily for glob expansion
+    set +o pipefail
+    du_numeric_output=$(command du -sk ./* ./.[!.]* 2>/dev/null | sort -rn | head -n "$list_length")
+    # Convert to human-readable format (using awk)
+    # Note: du -sk outputs in KB
+    du_output=$(echo "$du_numeric_output" | awk 'BEGIN {FS="\t"; OFS="\t"} {
+        size = $1
+        item = $2
 
-                # Convert KB to human-readable
-                if (size >= 1048576) printf "%.1fG\t%s\n", size/1048576, item
-                else if (size >= 1024) printf "%.0fM\t%s\n", size/1024, item
-                else printf "%.0fK\t%s\n", size, item
-            }')
-            max_size_cmd=$(echo "$du_numeric_output" | head -1 | awk '{print $1}')
-        fi
-        set -o pipefail
-    else
-        # Fall back to traditional du command (disable pipefail temporarily for glob expansion)
-        set +o pipefail
-        du_numeric_output=$(du -s -d "$max_depth" ./* ./.[!.]* 2>/dev/null | sort -rn | head -n "$list_length")
-        # Convert to human-readable format (using awk)
-        # Note: du -s outputs in KB (512-byte blocks * 2 = KB on macOS)
-        du_output=$(echo "$du_numeric_output" | awk 'BEGIN {FS="\t"; OFS="\t"} {
-            size = $1
-            item = $2
-
-            # Convert KB to human-readable
-            if (size >= 1048576) printf "%.1fG\t%s\n", size/1048576, item
-            else if (size >= 1024) printf "%.0fM\t%s\n", size/1024, item
-            else printf "%.0fK\t%s\n", size, item
-        }' || true)
-        max_size_cmd=$(echo "$du_numeric_output" | head -1 | awk '{print $1}')
-        set -o pipefail
-    fi
+        # Convert KB to human-readable
+        if (size >= 1048576) printf "%.1fG\t%s\n", size/1048576, item
+        else if (size >= 1024) printf "%.0fM\t%s\n", size/1024, item
+        else printf "%.0fK\t%s\n", size, item
+    }' || true)
+    max_size_cmd=$(echo "$du_numeric_output" | head -1 | awk '{print $1}')
+    set -o pipefail
 
     if [[ -z "$du_output" ]]; then
         echo "┌────────────────────┐"
