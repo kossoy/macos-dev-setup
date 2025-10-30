@@ -103,6 +103,12 @@ alias la-load='$HOME/work/scripts/launchagent-load.sh'
 alias la-unload='$HOME/work/scripts/launchagent-unload.sh'
 alias la-reload='$HOME/work/scripts/launchagent-reload.sh'
 
+# Vaultwarden backup management
+alias vw-backup='$HOME/work/scripts/vaultwarden-backup.zsh'
+alias vw-monitor='$HOME/work/scripts/vaultwarden-backup-monitor.zsh'
+alias vw-preview='$HOME/work/scripts/vaultwarden-preview.zsh'
+alias vw-setup='$HOME/work/scripts/vaultwarden-setup.zsh'
+
 # =============================================================================
 # DOCKER ALIASES
 # =============================================================================
