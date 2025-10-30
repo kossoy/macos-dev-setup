@@ -378,14 +378,51 @@ work() {
     # Browser switching
     if command -v defaultbrowser >/dev/null 2>&1; then
         local work_browser="${WORK_BROWSER:-browser}"
-        echo "   🌐 Switching default browser..."
-        defaultbrowser "$work_browser" 2>/dev/null
-        echo "   💡 A system alert should appear asking to confirm the browser change"
-        echo -n "   Press Enter after confirming the browser change..."
-        read
-        echo "   ⏳ Waiting for system to update browser settings..."
-        sleep 3
-        echo "   ✅ Browser switch confirmed"
+
+        # Get current browser before switch
+        local current_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+
+        # Map work_browser shorthand to bundle ID
+        local expected_bundle_id=""
+        case "$work_browser" in
+            browser) expected_bundle_id="com.brave.browser" ;;
+            beta) expected_bundle_id="com.brave.browser.beta" ;;
+            chrome) expected_bundle_id="com.google.chrome" ;;
+            safari) expected_bundle_id="com.apple.safari" ;;
+            firefox) expected_bundle_id="org.mozilla.firefox" ;;
+            *) expected_bundle_id="$work_browser" ;;
+        esac
+
+        # Check if browser is already set correctly
+        if [[ "$current_browser" == "$expected_bundle_id" ]]; then
+            echo "   ✅ Browser already set to correct default"
+        else
+            echo "   🌐 Switching default browser..."
+            defaultbrowser "$work_browser" 2>/dev/null
+            echo "   💡 A system alert should appear asking to confirm the browser change"
+            echo -n "   Press Enter after confirming (or canceling) the browser change..."
+            read
+
+            # Poll for browser change (max 5 seconds)
+            echo "   ⏳ Waiting for system to update browser settings..."
+            local max_attempts=10
+            local attempt=0
+            while [[ $attempt -lt $max_attempts ]]; do
+                local new_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+
+                if [[ "$new_browser" != "$current_browser" ]]; then
+                    echo "   ✅ Browser settings updated"
+                    break
+                fi
+
+                sleep 0.5
+                ((attempt++))
+            done
+
+            if [[ $attempt -eq $max_attempts ]]; then
+                echo "   ${yellow}⚠️  Browser change not detected (may have been canceled)${reset}"
+            fi
+        fi
     fi
 
     # VPN connectivity check for GitHub Enterprise
@@ -515,14 +552,51 @@ personal() {
     # Browser switching
     if command -v defaultbrowser >/dev/null 2>&1; then
         local personal_browser="${PERSONAL_BROWSER:-beta}"
-        echo "   🌐 Switching default browser..."
-        defaultbrowser "$personal_browser" 2>/dev/null
-        echo "   💡 A system alert should appear asking to confirm the browser change"
-        echo -n "   Press Enter after confirming the browser change..."
-        read
-        echo "   ⏳ Waiting for system to update browser settings..."
-        sleep 3
-        echo "   ✅ Browser switch confirmed"
+
+        # Get current browser before switch
+        local current_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+
+        # Map personal_browser shorthand to bundle ID
+        local expected_bundle_id=""
+        case "$personal_browser" in
+            browser) expected_bundle_id="com.brave.browser" ;;
+            beta) expected_bundle_id="com.brave.browser.beta" ;;
+            chrome) expected_bundle_id="com.google.chrome" ;;
+            safari) expected_bundle_id="com.apple.safari" ;;
+            firefox) expected_bundle_id="org.mozilla.firefox" ;;
+            *) expected_bundle_id="$personal_browser" ;;
+        esac
+
+        # Check if browser is already set correctly
+        if [[ "$current_browser" == "$expected_bundle_id" ]]; then
+            echo "   ✅ Browser already set to correct default"
+        else
+            echo "   🌐 Switching default browser..."
+            defaultbrowser "$personal_browser" 2>/dev/null
+            echo "   💡 A system alert should appear asking to confirm the browser change"
+            echo -n "   Press Enter after confirming (or canceling) the browser change..."
+            read
+
+            # Poll for browser change (max 5 seconds)
+            echo "   ⏳ Waiting for system to update browser settings..."
+            local max_attempts=10
+            local attempt=0
+            while [[ $attempt -lt $max_attempts ]]; do
+                local new_browser=$(python3 -c "import plistlib, os; plist = plistlib.load(open(os.path.expanduser('~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist'), 'rb')); handlers = plist.get('LSHandlers', []); http_handler = next((h for h in handlers if h.get('LSHandlerURLScheme') == 'http'), {}); print(http_handler.get('LSHandlerRoleAll', ''))" 2>/dev/null)
+
+                if [[ "$new_browser" != "$current_browser" ]]; then
+                    echo "   ✅ Browser settings updated"
+                    break
+                fi
+
+                sleep 0.5
+                ((attempt++))
+            done
+
+            if [[ $attempt -eq $max_attempts ]]; then
+                echo "   ${yellow}⚠️  Browser change not detected (may have been canceled)${reset}"
+            fi
+        fi
     fi
 
     # GitHub CLI verification
