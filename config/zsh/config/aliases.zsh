@@ -159,9 +159,6 @@ elif [[ -f "$HOME/macos-dev-setup/scripts/wdu.sh" ]]; then
     alias wdu-quick="$HOME/macos-dev-setup/scripts/wdu-quick.sh"
 fi
 
-alias vw-monitor="$HOME/bin/vaultwarden-backup-monitor.zsh"
-alias vw-preview="$HOME/bin/vaultwarden-preview.zsh"
-
 # =============================================================================
 # NAS MOUNT ALIASES
 # =============================================================================
@@ -228,7 +225,3 @@ if command -v eza >/dev/null 2>&1; then
     alias ll='eza -la'
     alias la='eza -a'
 fi
-# Vaultwarden Backup Tools
-alias vw-backup="$HOME/bin/vaultwarden-backup.zsh"
-alias vw-monitor="$HOME/bin/vaultwarden-backup-monitor.zsh"
-alias vw-preview="$HOME/bin/vaultwarden-preview.zsh"

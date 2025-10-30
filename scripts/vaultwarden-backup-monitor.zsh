@@ -50,8 +50,8 @@ print_section() {
 }
 
 status_icon() {
-    local status="$1"
-    case $status in
+    local state="$1"
+    case $state in
         "ok"|"success"|"good")
             echo "${GREEN}✅${NC}"
             ;;
@@ -278,8 +278,8 @@ check_bitwarden_cli() {
         echo "$(status_icon info) Server: ${server}"
         
         # Check login status
-        local status=$(bw status 2>/dev/null | jq -r '.status' 2>/dev/null || echo "unknown")
-        echo "$(status_icon info) Status: ${status}"
+        local bw_status=$(bw status 2>/dev/null | jq -r '.status' 2>/dev/null || echo "unknown")
+        echo "$(status_icon info) Status: ${bw_status}"
     else
         echo "$(status_icon error) Bitwarden CLI not found"
         echo "  Install with: brew install bitwarden-cli"
@@ -415,23 +415,23 @@ generate_health_score() {
     print_section "Health Score"
     
     local color=$GREEN
-    local status="EXCELLENT"
-    
+    local health_status="EXCELLENT"
+
     if (( score < 50 )); then
         color=$RED
-        status="CRITICAL"
+        health_status="CRITICAL"
     elif (( score < 70 )); then
         color=$YELLOW
-        status="WARNING"
+        health_status="WARNING"
     elif (( score < 90 )); then
         color=$BLUE
-        status="GOOD"
+        health_status="GOOD"
     fi
-    
+
     echo ""
     echo "${color}╔════════════════════════════════╗${NC}"
     echo "${color}║  HEALTH SCORE: ${score}/100        ║${NC}"
-    echo "${color}║  STATUS: ${status}$(printf '%*s' $((20 - ${#status})) '')║${NC}"
+    echo "${color}║  STATUS: ${health_status}$(printf '%*s' $((20 - ${#health_status})) '')║${NC}"
     echo "${color}╚════════════════════════════════╝${NC}"
     echo ""
     

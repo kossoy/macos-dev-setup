@@ -82,7 +82,9 @@
       "Bash(~/bin/vaultwarden-backup.zsh:*)",
       "Bash(~/work/scripts/launchagent-reload.sh:*)",
       "Bash(awk:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(vw-monitor)",
+      "Bash(~/work/scripts/vaultwarden-backup-monitor.zsh)"
     ],
     "deny": [],
     "ask": []
