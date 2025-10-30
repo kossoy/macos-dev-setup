@@ -146,11 +146,9 @@ alias dnstest='$HOME/work/home/playground/_net/dnsperftest/dnstest.sh | sort -k 
 if [[ -f "$HOME/work/scripts/wdu.sh" ]]; then
     alias wdu="$HOME/work/scripts/wdu.sh"
     alias wdu-quick="$HOME/work/scripts/wdu-quick.sh"
-    alias aiwdu="$HOME/work/scripts/ai_wdu.sh"
 elif [[ -f "$HOME/macos-dev-setup/scripts/wdu.sh" ]]; then
     alias wdu="$HOME/macos-dev-setup/scripts/wdu.sh"
     alias wdu-quick="$HOME/macos-dev-setup/scripts/wdu-quick.sh"
-    alias aiwdu="$HOME/macos-dev-setup/scripts/ai_wdu.sh"
 fi
 
 alias vw-monitor="$HOME/bin/vaultwarden-backup-monitor.zsh"

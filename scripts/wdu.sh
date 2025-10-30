@@ -2,6 +2,7 @@
 
 # Quick disk usage display - optimized version
 # Shows disk usage of current directory or specified directory
+# Original thanks to bolk http://bolknote.ru/2011/09/14/~3407#07
 
 set -eo pipefail
 
