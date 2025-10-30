@@ -60,7 +60,8 @@
       "Bash(xattr:*)",
       "Bash(defaultbrowser:*)",
       "Bash(/bin/rm:*)",
-      "Bash(rmdir:*)"
+      "Bash(rmdir:*)",
+      "Bash(/bin/cp:*)"
     ],
     "deny": [],
     "ask": []
