@@ -9,6 +9,11 @@ if [ -f ~/.config/zsh/contexts/current.zsh ]; then
     source ~/.config/zsh/contexts/current.zsh
 fi
 
+# Load work/personal configuration (private, not in git)
+if [ -f ~/.config/zsh/private/work-personal-config.zsh ]; then
+    source ~/.config/zsh/private/work-personal-config.zsh
+fi
+
 # VPN aliases
 [[ -f "$HOME/.config/zsh/aliases/vpn-aliases.zsh" ]] && source "$HOME/.config/zsh/aliases/vpn-aliases.zsh"
 
