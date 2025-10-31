@@ -94,6 +94,24 @@ cat ~/.ssh/id_ed25519_github.pub
 
 ### 6. Add SSH Key to GitHub
 
+**Option A: Automatic Upload with GitHub CLI (Recommended)**
+
+```zsh
+# Install GitHub CLI if not already installed
+brew install gh
+
+# Authenticate with GitHub
+gh auth login
+
+# Upload SSH key automatically
+gh ssh-key add ~/.ssh/id_ed25519_github.pub --title "$(hostname)-$(date +%Y%m%d)"
+
+# Verify
+gh ssh-key list
+```
+
+**Option B: Manual Upload via Web Interface**
+
 1. Go to [GitHub SSH Keys Settings](https://github.com/settings/keys)
 2. Click **"New SSH key"**
 3. **Title**: `MacBook Pro M1 - Vaultwarden Backups` (or descriptive name)

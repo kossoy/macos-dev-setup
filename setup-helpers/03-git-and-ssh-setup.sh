@@ -213,99 +213,141 @@ print_success "SSH config created"
 echo ""
 
 # ============================================================================
-# Display SSH Public Keys
+# GitHub CLI - Install First (needed for automatic key upload)
 # ============================================================================
 
-print_header "📋 SSH Public Keys"
-echo ""
-print_status "Add these public keys to your GitHub accounts:"
-echo ""
-
-echo "=================================================="
-echo "WORK SSH KEY (add to work GitHub):"
-echo "=================================================="
-cat "$WORK_KEY.pub"
-echo ""
-
-echo "=================================================="
-echo "PERSONAL SSH KEY (add to personal GitHub):"
-echo "=================================================="
-cat "$PERSONAL_KEY.pub"
-echo ""
-
-print_warning "Copy the keys above and add them to GitHub:"
-echo "  Work: https://github.com/settings/keys (or your work GitHub)"
-echo "  Personal: https://github.com/settings/keys"
-echo ""
-
-read -p "Press Enter when you've added the keys to GitHub..."
-echo ""
-
-# Test SSH connection
-print_status "Testing SSH connection to GitHub..."
-echo ""
-
-print_status "Testing work key..."
-ssh -T git@github.com-work 2>&1 | grep -q "successfully authenticated" && \
-    print_success "Work SSH key working!" || \
-    print_warning "Work SSH key not verified (you may need to add it to GitHub)"
-
-print_status "Testing personal key..."
-ssh -T git@github.com-personal 2>&1 | grep -q "successfully authenticated" && \
-    print_success "Personal SSH key working!" || \
-    print_warning "Personal SSH key not verified (you may need to add it to GitHub)"
-
-echo ""
-
-# ============================================================================
-# GitHub CLI
-# ============================================================================
-
-print_header "🐙 GitHub CLI Setup"
+print_header "🐙 GitHub CLI Installation"
 echo ""
 
 # Check if GitHub CLI is installed
 if ! command -v gh &>/dev/null; then
     print_warning "GitHub CLI (gh) not installed"
-    read -p "Install GitHub CLI? (y/n): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_status "Installing GitHub CLI..."
-        brew install gh
-        print_success "GitHub CLI installed"
-    else
-        print_warning "Skipping GitHub CLI installation"
-        print_status "You can install later with: brew install gh"
-    fi
+    print_status "Installing GitHub CLI..."
+    brew install gh
+    print_success "GitHub CLI installed"
 else
     print_success "GitHub CLI already installed"
 fi
 
-# Authenticate with GitHub CLI
-if command -v gh &>/dev/null; then
-    echo ""
-    print_status "GitHub CLI authentication"
-    echo ""
-    print_status "You can authenticate with both work and personal accounts"
+echo ""
+
+# ============================================================================
+# SSH Key Upload Options
+# ============================================================================
+
+print_header "📋 SSH Key Setup"
+echo ""
+print_status "How would you like to add your SSH keys to GitHub?"
+echo ""
+echo "  1) Automatic upload using GitHub CLI (recommended)"
+echo "  2) Manual upload (I'll do it myself)"
+echo ""
+read -p "Choice (1 or 2): " upload_choice
+echo ""
+
+if [[ "$upload_choice" == "1" ]]; then
+    # ========================================================================
+    # Automatic Upload with gh CLI
+    # ========================================================================
+
+    print_header "🔐 Automatic SSH Key Upload"
     echo ""
 
-    read -p "Authenticate with GitHub CLI now? (y/n): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_status "Starting GitHub CLI authentication..."
-        print_status "Follow the prompts to authenticate"
+    # Authenticate first if not already authenticated
+    if ! gh auth status &>/dev/null; then
+        print_status "Authenticating with GitHub CLI..."
+        print_warning "You'll be prompted to log in - choose HTTPS and browser authentication"
         echo ""
         gh auth login
-
         echo ""
-        print_success "GitHub CLI authenticated"
-        print_status "Check status with: gh auth status"
-    else
-        print_status "Authenticate later with: gh auth login"
     fi
+
+    # Upload work key
+    print_status "Uploading work SSH key..."
+    if gh ssh-key add "$WORK_KEY.pub" --title "$(hostname)-work-$(date +%Y%m%d)" --type authentication; then
+        print_success "Work SSH key uploaded to GitHub!"
+    else
+        print_warning "Failed to upload work key (it may already exist)"
+    fi
+
+    # Ask if they have a separate personal GitHub account
+    echo ""
+    read -p "Do you have a separate personal GitHub account? (y/n): " -n 1 -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        print_status "Adding personal GitHub account..."
+        print_warning "You'll be prompted to log in to your personal account"
+        echo ""
+        gh auth login
+        echo ""
+
+        print_status "Uploading personal SSH key..."
+        if gh ssh-key add "$PERSONAL_KEY.pub" --title "$(hostname)-personal-$(date +%Y%m%d)" --type authentication; then
+            print_success "Personal SSH key uploaded to GitHub!"
+        else
+            print_warning "Failed to upload personal key (it may already exist)"
+        fi
+    else
+        print_status "Uploading personal key to same account..."
+        if gh ssh-key add "$PERSONAL_KEY.pub" --title "$(hostname)-personal-$(date +%Y%m%d)" --type authentication; then
+            print_success "Personal SSH key uploaded to GitHub!"
+        else
+            print_warning "Failed to upload personal key (it may already exist)"
+        fi
+    fi
+
+else
+    # ========================================================================
+    # Manual Upload
+    # ========================================================================
+
+    print_header "📋 Manual SSH Key Upload"
+    echo ""
+    print_status "Add these public keys to your GitHub accounts:"
+    echo ""
+
+    echo "=================================================="
+    echo "WORK SSH KEY (add to work GitHub):"
+    echo "=================================================="
+    cat "$WORK_KEY.pub"
+    echo ""
+
+    echo "=================================================="
+    echo "PERSONAL SSH KEY (add to personal GitHub):"
+    echo "=================================================="
+    cat "$PERSONAL_KEY.pub"
+    echo ""
+
+    print_warning "Copy the keys above and add them to GitHub:"
+    echo "  Work: https://github.com/settings/keys (or your work GitHub)"
+    echo "  Personal: https://github.com/settings/keys"
+    echo ""
+
+    read -p "Press Enter when you've added the keys to GitHub..."
+    echo ""
 fi
 
+# ============================================================================
+# Test SSH Connection
+# ============================================================================
+
+print_header "🧪 Testing SSH Connection"
 echo ""
+
+print_status "Testing work key..."
+if ssh -T git@github.com-work 2>&1 | grep -q "successfully authenticated"; then
+    print_success "Work SSH key working!"
+else
+    print_warning "Work SSH key not verified yet (may take a moment to propagate)"
+fi
+
+print_status "Testing personal key..."
+if ssh -T git@github.com-personal 2>&1 | grep -q "successfully authenticated"; then
+    print_success "Personal SSH key working!"
+else
+    print_warning "Personal SSH key not verified yet (may take a moment to propagate)"
+fi
 
 # ============================================================================
 # Summary
@@ -354,9 +396,15 @@ if command -v gh &>/dev/null; then
 fi
 
 print_status "Next steps:"
-echo "  1. Verify SSH keys are added to GitHub"
-echo "  2. Test cloning a repository"
-echo "  3. Configure context switching: run full bootstrap.sh"
+if [[ "$upload_choice" == "2" ]]; then
+    echo "  1. Verify SSH keys are added to GitHub (gh ssh-key list)"
+    echo "  2. Test cloning a repository"
+    echo "  3. Configure context switching: run full bootstrap.sh"
+else
+    echo "  1. Test cloning a repository"
+    echo "  2. Configure context switching: run full bootstrap.sh"
+    echo "  3. Manage SSH keys: gh ssh-key list"
+fi
 echo ""
 
 print_status "Tip: Use context switching functions (work/personal) to automatically"
