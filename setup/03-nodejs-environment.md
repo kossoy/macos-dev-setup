@@ -69,21 +69,31 @@ Install commonly used global packages via Volta:
 # Package managers
 volta install yarn pnpm
 
+# ⚠️ IMPORTANT: Reload shell after installing
+exec zsh
+
 # TypeScript ecosystem
 volta install typescript ts-node
+exec zsh
 
 # Development tools
 volta install nodemon eslint prettier
+exec zsh
 
 # Build tools
 volta install webpack webpack-cli vite
+exec zsh
 
 # Framework CLIs
 volta install @angular/cli @vue/cli create-react-app
+exec zsh
 
-# All at once
+# Or install all at once, then reload ONCE
 volta install yarn pnpm typescript ts-node nodemon eslint prettier webpack webpack-cli vite @angular/cli @vue/cli create-react-app
+exec zsh
 ```
+
+**Critical:** After EVERY `volta install` command, run `exec zsh` to reload your shell. Otherwise, the command won't be available.
 
 ### Package Descriptions
 
@@ -466,22 +476,20 @@ success: installed and set yarn@4.10.3 as default
 zsh: command not found: yarn
 ```
 
-**Solution:** Reload your shell to pick up the newly installed command:
+**Solution:** Run this command now:
 
 ```bash
-# Option 1: Reload current shell (recommended)
 exec zsh
+```
 
-# Option 2: Source your configuration
-source ~/.zshrc
-
-# Verify it works
+Then verify it works:
+```bash
 yarn --version
 ```
 
 **Why this happens:** When Volta installs a new tool (like yarn, pnpm, or any global package), it adds the binary to `~/.volta/bin/`. Your current shell session already has its PATH set, so it doesn't see the newly added binary until you reload the shell or start a new terminal session.
 
-**Prevention:** After any `volta install` command, run `exec zsh` to reload your shell.
+**Always do this:** After EVERY `volta install` command, immediately run `exec zsh`.
 
 ### Module Not Found
 
