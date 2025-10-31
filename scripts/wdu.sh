@@ -112,7 +112,9 @@ main() {
     # Get disk usage (only immediate children, not recursive)
     local du_output
     local du_numeric_output
+    local du_all_output
     local max_size_cmd
+    local total_size
 
     # Use du to get all items (no filtering - shows everything including venv/, node_modules/, .git/, etc.)
     # Use 'command du' to bypass any shell alias (like 'du -h')
@@ -120,7 +122,15 @@ main() {
     # Disable pipefail temporarily for glob expansion and enable NULL_GLOB to handle empty directories
     setopt NULL_GLOB 2>/dev/null || true
     set +o pipefail
-    du_numeric_output=$(command du -sk ./* ./.[!.]* 2>/dev/null | sort -rn | head -n "$list_length")
+
+    # Get all items for total calculation
+    du_all_output=$(command du -sk ./* ./.[!.]* 2>/dev/null)
+
+    # Calculate total size of all items
+    total_size=$(echo "$du_all_output" | awk '{sum += $1} END {print sum}')
+
+    # Get top N items for display
+    du_numeric_output=$(echo "$du_all_output" | sort -rn | head -n "$list_length")
     unsetopt NULL_GLOB 2>/dev/null || true
     # Convert to human-readable format (using awk)
     # Note: du -sk outputs in KB
@@ -238,6 +248,20 @@ main() {
     done <<< "$du_output"
 
     echo "└${bar_border}┴${size_border}┴${name_border}┘"
+
+    # Display total storage
+    local total_human
+    if [[ -n "$total_size" && "$total_size" -gt 0 ]]; then
+        # Convert total to human-readable format
+        if (( total_size >= 1048576 )); then
+            total_human=$(awk -v size="$total_size" 'BEGIN {printf "%.1fG", size/1048576}')
+        elif (( total_size >= 1024 )); then
+            total_human=$(awk -v size="$total_size" 'BEGIN {printf "%.0fM", size/1024}')
+        else
+            total_human=$(awk -v size="$total_size" 'BEGIN {printf "%.0fK", size}')
+        fi
+        echo "Total: $total_human"
+    fi
 }
 
 main "$@"
