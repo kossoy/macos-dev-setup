@@ -491,6 +491,12 @@ yarn --version
 
 **Always do this:** After EVERY `volta install` command, immediately run `exec zsh`.
 
+**Why can't volta or the script do this automatically?** Because of how Unix processes work:
+- When you run `volta install yarn`, it runs in a subprocess of your shell
+- The subprocess can't reload your parent shell's environment
+- Only YOU can reload your own shell by running `exec zsh` in it
+- This is a fundamental limitation, not a bug or missing feature
+
 ### Module Not Found
 
 ```bash
