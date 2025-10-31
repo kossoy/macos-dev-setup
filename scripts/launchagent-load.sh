@@ -126,7 +126,7 @@ show_usage() {
     echo "  $(basename "$0") -l"
     echo "  $(basename "$0") com.homebrew.autoupdate"
     echo "  $(basename "$0") com.homebrew.autoupdate.plist"
-    echo "  $(basename "$0") com.user.mount-nas-volumes com.user.vaultwarden-backup"
+    echo "  $(basename "$0") com.befeast.mount-nas-volumes com.befeast.vaultwarden-backup"
     echo "  $(basename "$0") --all"
     echo ""
 }

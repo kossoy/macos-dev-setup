@@ -85,7 +85,10 @@
       "Bash(~/bin/vaultwarden-backup.zsh:*)",
       "Bash(~/work/scripts/vaultwarden-backup-monitor.zsh)",
       "Bash($HOME/work/scripts/vaultwarden-backup-monitor.zsh)",
-      "Bash(/Users/i065699/work/scripts/vaultwarden-backup-monitor.zsh)"
+      "Bash(/Users/i065699/work/scripts/vaultwarden-backup-monitor.zsh)",
+      "Bash(comm:*)",
+      "Bash(launchctl load:*)",
+      "Bash(launchctl unload:*)"
     ],
     "deny": [],
     "ask": []

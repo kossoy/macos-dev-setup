@@ -93,7 +93,7 @@ validate_label() {
     fi
 
     if [[ ! "$label" =~ \. ]]; then
-        print_warning "Label should follow reverse-DNS format (e.g., com.user.myagent)"
+        print_warning "Label should follow reverse-DNS format (e.g., com.befeast.myagent)"
     fi
 
     return 0
@@ -384,7 +384,7 @@ wizard() {
     # Get label
     local label
     while true; do
-        label=$(prompt "Agent label (e.g., com.user.my-agent)")
+        label=$(prompt "Agent label (e.g., com.befeast.my-agent)")
         if [[ -z "$label" ]]; then
             print_error "Label is required"
             continue

@@ -54,7 +54,7 @@ check_macos() {
 
 # Main execution
 main() {
-    local total_steps=7
+    local total_steps=8
 
     print_header "🍎 macOS Fresh Setup - Simple Bootstrap"
     print_header "========================================"
@@ -116,8 +116,19 @@ main() {
     fi
     echo ""
 
-    # Step 6: Set up basic context (default)
-    print_step 6 $total_steps "Setting up default context..."
+    # Step 6: Set up SSH keys
+    print_step 6 $total_steps "Setting up SSH keys..."
+    if [[ ! -f "$HOME/.ssh/id_ed25519_work" ]] || [[ ! -f "$HOME/.ssh/id_ed25519_personal" ]]; then
+        bash "$SCRIPT_DIR/setup-helpers/10-setup-ssh-keys.sh" --non-interactive || {
+            print_warning "SSH key setup encountered issues (continuing anyway)"
+        }
+    else
+        print_success "SSH keys already exist"
+    fi
+    echo ""
+
+    # Step 7: Set up basic context (default)
+    print_step 7 $total_steps "Setting up default context..."
     mkdir -p ~/.config/zsh/contexts ~/.config/zsh/private
 
     # Create default context file
@@ -133,8 +144,8 @@ EOF
     fi
     echo ""
 
-    # Step 7: Final setup
-    print_step 7 $total_steps "Finalizing setup..."
+    # Step 8: Final setup
+    print_step 8 $total_steps "Finalizing setup..."
 
     # Ensure ~/.zshrc exists and sources our config
     if [[ ! -f "$HOME/.zshrc" ]] || ! grep -q "\.config/zsh" "$HOME/.zshrc"; then

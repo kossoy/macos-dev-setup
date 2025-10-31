@@ -431,7 +431,7 @@ fi
 
 print_step "Step 9: Setting Up Automated Backups"
 
-PLIST_FILE="$HOME/Library/LaunchAgents/com.user.vaultwarden-backup.plist"
+PLIST_FILE="$HOME/Library/LaunchAgents/com.befeast.vaultwarden-backup.plist"
 
 cat > "$PLIST_FILE" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -439,7 +439,7 @@ cat > "$PLIST_FILE" << EOF
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.user.vaultwarden-backup</string>
+    <string>com.befeast.vaultwarden-backup</string>
     
     <key>ProgramArguments</key>
     <array>

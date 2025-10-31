@@ -160,7 +160,7 @@ draw_agent_list() {
 
     local agents
     if [[ "$FILTER_USER_ONLY" == "true" ]]; then
-        agents=$(launchctl list | awk 'NR>1 {print $3}' | grep "^com.user." | sort)
+        agents=$(launchctl list | awk 'NR>1 {print $3}' | grep "^com.befeast." | sort)
     else
         agents=$(launchctl list | awk 'NR>1 {print $3}' | sort)
     fi

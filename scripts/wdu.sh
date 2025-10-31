@@ -117,9 +117,11 @@ main() {
     # Use du to get all items (no filtering - shows everything including venv/, node_modules/, .git/, etc.)
     # Use 'command du' to bypass any shell alias (like 'du -h')
     # Note: -s (summary) with glob patterns ./* and ./.[!.]* already gives immediate children only
-    # Disable pipefail temporarily for glob expansion
+    # Disable pipefail temporarily for glob expansion and enable NULL_GLOB to handle empty directories
+    setopt NULL_GLOB 2>/dev/null || true
     set +o pipefail
     du_numeric_output=$(command du -sk ./* ./.[!.]* 2>/dev/null | sort -rn | head -n "$list_length")
+    unsetopt NULL_GLOB 2>/dev/null || true
     # Convert to human-readable format (using awk)
     # Note: du -sk outputs in KB
     du_output=$(echo "$du_numeric_output" | awk 'BEGIN {FS="\t"; OFS="\t"} {
@@ -203,7 +205,7 @@ main() {
         # Get numeric size from cache (avoiding redundant du call)
         local size=${size_cache[$item]:-0}
         [[ -z "$size" ]] && size=0
-        
+
         # Calculate bar length
         local percent=$(( (size * bar_width) / max_size ))
         (( percent > bar_width )) && percent=$bar_width
@@ -232,7 +234,7 @@ main() {
         # Output line with proper alignment
         printf "│ ${color}%-${bar_width}s${RESET} │ %${SIZE_COL_WIDTH}s │ %-${name_width}s │\n" \
             "${bar}${empty}" "$human_size" "$display_name"
-        
+
     done <<< "$du_output"
 
     echo "└${bar_border}┴${size_border}┴${name_border}┘"

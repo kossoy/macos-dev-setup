@@ -290,7 +290,7 @@ check_bitwarden_cli() {
 check_launchagent() {
     print_section "LaunchAgent Status"
     
-    local plist="${HOME}/Library/LaunchAgents/com.user.vaultwarden-backup.plist"
+    local plist="${HOME}/Library/LaunchAgents/com.befeast.vaultwarden-backup.plist"
     
     if [[ -f "$plist" ]]; then
         echo "$(status_icon ok) Plist file exists"
@@ -300,7 +300,7 @@ check_launchagent() {
             echo "$(status_icon ok) LaunchAgent: Loaded"
             
             # Get status
-            local status_output=$(launchctl print gui/$(id -u)/com.user.vaultwarden-backup 2>/dev/null)
+            local status_output=$(launchctl print gui/$(id -u)/com.befeast.vaultwarden-backup 2>/dev/null)
             
             # Extract last exit status
             local exit_code=$(echo "$status_output" | grep "last exit code" | awk '{print $NF}')
