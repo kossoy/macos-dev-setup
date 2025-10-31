@@ -452,6 +452,37 @@ source ~/.zshrc
 cat package.json | grep volta
 ```
 
+### Command Not Found After `volta install`
+
+**Problem:** After running `volta install yarn` (or similar), you get "command not found" error.
+
+**Example:**
+```bash
+❯ volta install yarn
+success: installed and set yarn@4.10.3 as default
+   note: cannot find command yarn. Please ensure that /Users/tester/.volta/bin is available on your PATH.
+
+❯ yarn --version
+zsh: command not found: yarn
+```
+
+**Solution:** Reload your shell to pick up the newly installed command:
+
+```bash
+# Option 1: Reload current shell (recommended)
+exec zsh
+
+# Option 2: Source your configuration
+source ~/.zshrc
+
+# Verify it works
+yarn --version
+```
+
+**Why this happens:** When Volta installs a new tool (like yarn, pnpm, or any global package), it adds the binary to `~/.volta/bin/`. Your current shell session already has its PATH set, so it doesn't see the newly added binary until you reload the shell or start a new terminal session.
+
+**Prevention:** After any `volta install` command, run `exec zsh` to reload your shell.
+
 ### Module Not Found
 
 ```bash
