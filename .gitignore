@@ -1,8 +1,8 @@
 # Sensitive files - never commit
 config/zsh/private/api-keys.zsh
 scripts/vault-backup.sh
-scripts/setup-nas-keychain.sh
-scripts/mount-nas-*.sh
+# Note: NAS scripts are safe to commit (no passwords, just config)
+# Actual credentials stored in macOS Keychain, not in scripts
 
 # User-specific files
 config/zsh/contexts/current.zsh
