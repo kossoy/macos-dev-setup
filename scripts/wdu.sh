@@ -107,7 +107,19 @@ main() {
     # Change to target directory
     cd "$target_dir" || exit 1
 
-    echo "Analyzing: $(pwd)"
+    local full_path=$(pwd)
+    echo "Analyzing: $full_path"
+
+    # Warn if scanning home directory (can be very slow)
+    if [[ "$full_path" == "$HOME" ]]; then
+        echo "⚠️  Warning: Scanning home directory can take several minutes due to Library/ caches"
+        echo "   Consider scanning specific directories instead: wdu ~/Documents, wdu ~/Downloads, etc."
+        echo ""
+        read -t 5 -p "Press Ctrl+C to cancel, or wait 5 seconds to continue..." || true
+        echo ""
+    fi
+
+    echo "Scanning directories..."
 
     # Get disk usage (only immediate children, not recursive)
     local du_output

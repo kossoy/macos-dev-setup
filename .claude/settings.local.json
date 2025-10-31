@@ -90,7 +90,9 @@
       "Bash(launchctl load:*)",
       "Bash(launchctl unload:*)",
       "Bash(./scripts/wdu.sh:*)",
-      "Bash(~/work/scripts/wdu.sh:*)"
+      "Bash(~/work/scripts/wdu.sh:*)",
+      "Bash(timeout 5 command du:*)",
+      "Bash(timeout 5 bash:*)"
     ],
     "deny": [],
     "ask": []
