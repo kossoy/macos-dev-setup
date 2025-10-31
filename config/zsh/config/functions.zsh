@@ -428,19 +428,19 @@ work() {
     fi
 
     # Load work key
-    if [[ -f "$HOME/.ssh/id_ed25519_concur" ]]; then
-        if ! ssh-add -l 2>/dev/null | grep -q "id_ed25519_concur"; then
-            if ssh-add "$HOME/.ssh/id_ed25519_concur" 2>/dev/null; then
+    if [[ -f "$HOME/.ssh/id_ed25519_work" ]]; then
+        if ! ssh-add -l 2>/dev/null | grep -q "id_ed25519_work"; then
+            if ssh-add "$HOME/.ssh/id_ed25519_work" 2>/dev/null; then
                 echo "   ✅ Work SSH key loaded"
             else
                 echo "   ${red}❌ Failed to load work SSH key${reset}" >&2
-                echo "   💡 Try: ssh-add $HOME/.ssh/id_ed25519_concur" >&2
+                echo "   💡 Try: ssh-add $HOME/.ssh/id_ed25519_work" >&2
             fi
         else
             echo "   ✅ Work SSH key already loaded"
         fi
     else
-        echo "   ${yellow}⚠️  Work SSH key not found: $HOME/.ssh/id_ed25519_concur${reset}" >&2
+        echo "   ${yellow}⚠️  Work SSH key not found: $HOME/.ssh/id_ed25519_work${reset}" >&2
     fi
 
     # Browser switching
@@ -636,9 +636,9 @@ personal() {
     echo "   🔑 Managing SSH keys..."
 
     # UNLOAD work key first (before loading personal)
-    if [[ -f "$HOME/.ssh/id_ed25519_concur" ]]; then
-        if ssh-add -l 2>/dev/null | grep -q "id_ed25519_concur"; then
-            if ssh-add -d "$HOME/.ssh/id_ed25519_concur" 2>/dev/null; then
+    if [[ -f "$HOME/.ssh/id_ed25519_work" ]]; then
+        if ssh-add -l 2>/dev/null | grep -q "id_ed25519_work"; then
+            if ssh-add -d "$HOME/.ssh/id_ed25519_work" 2>/dev/null; then
                 echo "   ✅ Work SSH key unloaded"
             else
                 echo "   ${yellow}⚠️  Could not unload work SSH key${reset}" >&2

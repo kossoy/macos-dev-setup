@@ -586,7 +586,7 @@ work
 
 3. **Manages SSH Keys:**
    - Loads personal SSH key (`id_ed25519`)
-   - Loads work SSH key (`id_ed25519_concur`)
+   - Loads work SSH key (`id_ed25519_work`)
    - Reports load status
 
 4. **Switches Default Browser:**
@@ -675,7 +675,7 @@ Same as `work()` but for personal context:
    - Sets `user.email` to personal email
 
 3. **Manages SSH Keys:**
-   - **Unloads work SSH key** (`id_ed25519_concur`)
+   - **Unloads work SSH key** (`id_ed25519_work`)
    - Ensures personal SSH key loaded (`id_ed25519`)
 
 4. **Switches Default Browser:**
@@ -767,7 +767,7 @@ show-context
 #
 # 🔑 SSH Keys Loaded:
 #    ✓ 256 SHA256:... id_ed25519 (ED25519)
-#    ✓ 256 SHA256:... id_ed25519_concur (ED25519)
+#    ✓ 256 SHA256:... id_ed25519_work (ED25519)
 ```
 
 **Information Displayed:**
@@ -948,8 +948,8 @@ Context switching functions require configuration in `config/zsh/private/api-key
 
 ```bash
 # Work Context
-export WORK_CONTEXT_NAME="SAP Concur"
-export WORK_ORG="CONCUR"
+export WORK_CONTEXT_NAME="Acme Corp"
+export WORK_ORG="ACME_CORP"
 export WORK_GIT_EMAIL="work@company.com"
 export WORK_BROWSER="browser"  # or "chrome", "safari", etc.
 export WORK_GITHUB_HOST="github.company.com"

@@ -19,8 +19,8 @@ export WORK_GITHUB_HOST="github.com"           # e.g., "github.com" or "github.c
 export PERSONAL_GITHUB_HOST="github.com"       # Usually "github.com"
 
 # Work context identifiers (collected during setup)
-export WORK_ORG="YOUR_COMPANY_ORG"             # Internal identifier (e.g., "ACME_CORP", "SAP_CONCUR")
-export WORK_CONTEXT_NAME="Your Company"        # Display name (e.g., "Acme Corp", "SAP Concur")
+export WORK_ORG="YOUR_COMPANY_ORG"             # Internal identifier (e.g., "ACME_CORP", "TECH_COMPANY")
+export WORK_CONTEXT_NAME="Your Company"        # Display name (e.g., "Acme Corp", "Tech Company")
 
 # Personal context identifiers (collected during setup)
 export PERSONAL_ORG="PERSONAL_ORG"             # Internal identifier (e.g., "MyStartup", "BeFeast")
