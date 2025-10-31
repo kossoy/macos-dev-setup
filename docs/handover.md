@@ -1,92 +1,119 @@
-# Session Handover: Repository Cleanup & Improvements
+# Session Handover: wdu Enhancement & Root Cleanup
 
 **Date:** October 31, 2025
-**Session Type:** Maintenance & Documentation
+**Session Type:** Feature Enhancement & Maintenance
 **Status:** ✅ Complete - All changes committed and pushed
-**Previous Handover:** `docs/archive/handover_20251031_034133.md`
+**Previous Handover:** `docs/archive/handover_20251031_095512.md`
 
 ---
 
 ## 🎯 Session Overview
 
-Successfully completed repository cleanup focusing on removing company-specific references, resolving NAS keychain setup issues, and improving bootstrap user experience.
+Successfully enhanced wdu.sh utility with total storage calculation and cleaned up root directory to comply with project documentation rules.
 
 ---
 
 ## ✅ Completed Work
 
-### 1. Removed Company-Specific References (Commit: dc3e9da)
+### 1. Root Directory Cleanup (Commit: 9cba08f)
 
-**Problem:** Repository contained SAP Concur-specific references that should be generic examples
-
-**Changes Made:**
-- **SSH Key Names:** `id_ed25519_concur` → `id_ed25519_work`
-- **Example Company:** "SAP Concur" / "CONCUR" → "Acme Corp" / "ACME_CORP"
-- **Files Updated:**
-  - `config/zsh/config/functions.zsh` - Work/personal SSH key management
-  - `config/zsh/private/work-personal-config.zsh.template` - Example values
-  - `docs/api/shell-functions.md` - Documentation examples
-  - `docs/api/context-api.md` - API documentation
-
-**Important:** Archive files (`docs/archive/`, `archive/session-handoffs/`) were preserved as historical records
-
-**Verified:** ✅ All non-archive references updated to generic examples
-
----
-
-### 2. Added NAS Setup Instructions (Commit: 5afa5e8)
-
-**Problem:** Bootstrap installs NAS scripts but doesn't guide users to set up keychain credentials
-
-**Root Cause Analysis:**
-- NAS mount scripts (`mount-nas-volumes.sh`) retrieve credentials from macOS Keychain
-- Keychain credentials must be stored first via `setup-nas-keychain.sh`
-- Bootstrap completion message didn't mention this required step
+**Problem:** File `2025-10-31.md` in root directory violated **Rule 2: Documentation Management**
 
 **Solution:**
-Added clear 4-step NAS setup section to `simple-bootstrap.sh` completion message:
-```
-Optional NAS auto-mount setup:
-  1. Store credentials: ~/work/scripts/setup-nas-keychain.sh
-  2. Test mounting:     nas-mount
-  3. Enable auto-mount: nas-enable
-  4. Documentation:     guides/nas-auto-mount-setup.md
-```
+- Moved `2025-10-31.md` → `docs/archive/daily-notes-2025-10-31.md`
+- Root directory now compliant: only `README.md`, `CLAUDE.md`, and script files
 
-**Documentation:** Comprehensive guide exists at `guides/nas-auto-mount-setup.md` (420 lines)
+**Rule 2 Reminder:**
+- **ALL .md files MUST be in `docs/` folder**
+- **Only exceptions: README.md and CLAUDE.md in root**
+- **Any violation MUST be fixed immediately**
 
-**Verified:** ✅ Bootstrap now guides users through complete NAS setup flow
+**Verified:** ✅ Root directory clean and compliant
 
 ---
 
-### 3. Documented Postman Alternative
+### 2. Enhanced wdu.sh with Total Storage Display (Commit: 9cba08f)
 
-**Question:** What's the Postman replacement we've been considering?
+**Feature Request:** Add total storage calculation showing complete folder usage
 
-**Answer:** **Bruno** - Open-source, git-friendly API client
+**Implementation:**
+
+**Changes Made to `scripts/wdu.sh`:**
+
+1. **Added total storage calculation (lines 115-130)**:
+   ```zsh
+   # Get all items for total calculation
+   du_all_output=$(command du -sk ./* ./.[!.]* 2>/dev/null)
+
+   # Calculate total size of all items
+   total_size=$(echo "$du_all_output" | awk '{sum += $1} END {print sum}')
+
+   # Get top N items for display
+   du_numeric_output=$(echo "$du_all_output" | sort -rn | head -n "$list_length")
+   ```
+
+2. **Added total display after table (lines 252-264)**:
+   ```zsh
+   # Display total storage
+   local total_human
+   if [[ -n "$total_size" && "$total_size" -gt 0 ]]; then
+       # Convert total to human-readable format
+       if (( total_size >= 1048576 )); then
+           total_human=$(awk -v size="$total_size" 'BEGIN {printf "%.1fG", size/1048576}')
+       elif (( total_size >= 1024 )); then
+           total_human=$(awk -v size="$total_size" 'BEGIN {printf "%.0fM", size/1024}')
+       else
+           total_human=$(awk -v size="$total_size" 'BEGIN {printf "%.0fK", size}')
+       fi
+       echo "Total: $total_human"
+   fi
+   ```
 
 **Key Features:**
-- Stores collections as files in your project (not cloud)
-- Perfect Git integration for team collaboration
-- Privacy-focused (no account/cloud required)
-- Imports Postman collections
-- Active development and community
+- Calculates total of **ALL items** in directory, not just displayed ones
+- Shows total below the table in human-readable format (K/M/G)
+- Works with all command options (`-n`, `-d`, directory argument)
+- Properly handles empty directories
 
-**Alternatives Researched:** Insomnia, Hoppscotch, Thunder Client
+**Example Output:**
+```
+Analyzing: /Users/i065699/macos-dev-setup
+┌──────────────────────┬─────────┬──────────────────────┐
+│ ████████████████████ │    956K │ ./.git               │
+│ ████████░░░░░░░░░░░░ │    384K │ ./guides             │
+│ █████░░░░░░░░░░░░░░░ │    260K │ ./scripts            │
+│ ████░░░░░░░░░░░░░░░░ │    236K │ ./docs               │
+│ ███░░░░░░░░░░░░░░░░░ │    184K │ ./config             │
+└──────────────────────┴─────────┴──────────────────────┘
+Total: 2M
+```
 
-**Decision:** Bruno chosen for git-friendly workflow and privacy
+**Testing Results:** ✅ All tests passed
 
----
+- **Test 1:** Default usage (top 10)
+  ```bash
+  ./scripts/wdu.sh
+  # ✅ Shows total: 2M (includes all items)
+  ```
 
-### 4. Committed Previous Session Documentation (Commit: 7c29a23)
+- **Test 2:** Limited display (top 5)
+  ```bash
+  ./scripts/wdu.sh -n 5
+  # ✅ Shows total: 2M (same total, fewer items displayed)
+  ```
 
-**Files Added:**
-- `docs/handover.md` - Previous session context (now archived)
-- `docs/archive/session-handoff-2025-10-31-clean-install-fixes.md` - Detailed handoff
+- **Test 3:** Different directory
+  ```bash
+  ./scripts/wdu.sh ~/work
+  # ✅ Shows total: 16.5G (correctly formats gigabytes)
+  ```
 
-**Updated:**
-- `.gitignore` - Clarified NAS script safety comments
-- `2025-10-31.md` - Daily notes with pending tasks
+**Deployment:**
+- ✅ Updated repository version: `scripts/wdu.sh`
+- ✅ Copied to active location: `~/work/scripts/wdu.sh`
+- ✅ Permissions updated in `.claude/settings.local.json`
+
+**Verified:** ✅ Total storage feature working correctly across all scenarios
 
 ---
 
@@ -98,10 +125,10 @@ Optional NAS auto-mount setup:
 
 **Recent Commits:**
 ```
+9cba08f - feat: add total storage display to wdu.sh and move daily notes to archive (just now)
+259c14b - docs: prepare comprehensive handover for next session
 5afa5e8 - feat: add NAS setup instructions to bootstrap and update daily notes
 dc3e9da - refactor: remove company-specific references and use generic examples
-7c29a23 - docs: add session handoff documentation and update daily notes
-980cf7f - fix: resolve clean install issues and rename LaunchAgents
 ```
 
 **Working Tree:** Clean, no uncommitted changes
@@ -110,57 +137,47 @@ dc3e9da - refactor: remove company-specific references and use generic examples
 
 ## 🏗️ Current Architecture
 
-### Context Switching System
-- **Work/Personal Contexts:** Git email, SSH keys, browsers, databases
-- **SSH Keys:**
-  - Personal: `~/.ssh/id_ed25519` (always loaded)
-  - Work: `~/.ssh/id_ed25519_work` (loaded/unloaded on context switch)
-- **Functions:** `work`, `personal`, `show-context`
+### wdu.sh Script Architecture
 
-### NAS Auto-Mount System
-- **Scripts:** `setup-nas-keychain.sh`, `mount-nas-volumes.sh`, `mount-nas-volumes-with-retry.sh`
-- **LaunchAgent:** `com.befeast.mount-nas-volumes.plist`
-- **Credentials:** Stored in macOS Keychain (service: "NAS_Credentials")
-- **Commands:** `nas-mount`, `nas-enable`, `nas-disable`, `nas-status`, `nas-logs`
+**Location:**
+- Source: `scripts/wdu.sh` (repository)
+- Deployed: `~/work/scripts/wdu.sh` (active use)
 
-### Bootstrap System
-- **Entry Points:** `install.sh` (remote), `bootstrap.sh` (interactive), `simple-bootstrap.sh` (automated)
-- **Helpers:** `setup-helpers/01-*.sh` through `setup-helpers/10-*.sh`
-- **Steps:** 8 steps including Homebrew, Oh My Zsh, shell config, directories, scripts, SSH keys, context, finalization
+**Key Functions:**
+- Disk usage visualization with colored bar charts
+- Configurable display limits (`-n` option)
+- Directory depth control (`-d` option)
+- **NEW:** Total storage calculation and display
 
-### LaunchAgents
-- **Naming Convention:** `com.befeast.*` (changed from `com.user.*`)
-- **Active Agents:**
-  - `com.befeast.mount-nas-volumes` - NAS auto-mount
-  - `com.befeast.organize-screenshots` - Screenshot organization
-  - `com.befeast.vaultwarden-backup` - Vaultwarden backup automation
+**Technical Details:**
+- Uses `du -sk` for accurate size calculations (KB)
+- Handles glob expansion safely with NULL_GLOB
+- Caches numeric sizes to avoid redundant du calls
+- Responsive column width calculation based on terminal size
+- Color coding: Green (< 33%), Yellow (33-50%), Red (> 50%)
 
 ---
 
-## 📊 Project Structure
+## 📚 Documentation Structure
 
-### Key Directories
+### Repository Layout
 ```
 macos-dev-setup/
 ├── .claude/
 │   ├── prompts/project-rules.md      # ⚠️ MUST READ - Project rules
 │   └── settings.local.json           # ⚠️ MUST READ - Permissions config
-├── config/zsh/                       # Shell configuration
-│   ├── config/                       # Modular config (aliases, functions, paths)
-│   ├── contexts/                     # Context switching (generated files)
-│   └── private/                      # User-specific config (gitignored)
-├── docs/                             # 📁 ALL .md files go here (except README/CLAUDE)
+├── docs/                             # 📁 ALL .md files go here
 │   ├── api/                          # API documentation
 │   ├── archive/                      # Historical documents
+│   │   ├── handover_20251031_095512.md  # Previous handover
+│   │   └── daily-notes-2025-10-31.md    # Archived daily notes
 │   ├── guides/                       # User guides
 │   └── handover.md                   # This file
-├── guides/                           # Detailed setup guides
-├── scripts/                          # Utility scripts (NAS, vaultwarden, etc.)
-├── setup/                            # Numbered setup guides (01-14)
-├── setup-helpers/                    # Bootstrap helper scripts
-├── bootstrap.sh                      # Interactive setup
-├── simple-bootstrap.sh               # Automated setup
-└── install.sh                        # Remote installer
+├── scripts/                          # Utility scripts
+│   ├── wdu.sh                        # Enhanced with total storage
+│   └── wdu-quick.sh                  # Quick version
+├── README.md                         # Root exception
+└── CLAUDE.md                         # Root exception
 ```
 
 ---
@@ -223,40 +240,17 @@ macos-dev-setup/
 - ✅ LaunchAgent management (befeast naming)
 - ✅ Bootstrap process (8 steps)
 - ✅ Shell configuration (aliases, functions, paths)
+- ✅ **wdu.sh with total storage display**
 
-### Recent Fixes
+### Recent Fixes & Enhancements
+- ✅ wdu.sh total storage calculation (this session)
+- ✅ Root directory Rule 2 compliance (this session)
 - ✅ wdu.sh globbing error (empty directories)
 - ✅ Missing NAS scripts in repository
 - ✅ SSH key generation automation
 - ✅ LaunchAgent naming consistency
 - ✅ Company-specific reference removal
 - ✅ NAS setup guidance in bootstrap
-
----
-
-## 📚 Documentation
-
-### Setup Guides (setup/)
-- 01-14: Comprehensive numbered guides
-- Topics: System, programming, databases, cloud, IDEs, security, productivity
-
-### User Guides (guides/)
-- Context switching workflow
-- GitHub/Git configuration
-- Vaultwarden backup system
-- Browser switching
-- NAS auto-mount setup
-- Audio production
-- Editor configuration
-
-### API Documentation (docs/api/)
-- `shell-functions.md` - All custom shell functions
-- `context-api.md` - Context switching system details
-
-### Reference (reference/)
-- Quick reference for commands
-- Troubleshooting guides
-- Common issues and solutions
 
 ---
 
@@ -295,6 +289,7 @@ launchctl list | grep befeast
 2. Implement additional features
 3. Update documentation as needed
 4. Add new utility scripts
+5. Further enhance wdu.sh (if needed)
 
 ### No Known Issues
 - All systems operational
@@ -305,7 +300,8 @@ launchctl list | grep befeast
 ### Recent Evolution
 - **Started:** Basic bootstrap → context switching
 - **Added:** NAS auto-mount, Vaultwarden backup
-- **This Session:** Cleanup, generic examples, NAS setup guide
+- **Previous Session:** Cleanup, generic examples, NAS setup guide
+- **This Session:** wdu.sh enhancement, root cleanup
 - **Next:** TBD by user requirements
 
 ---
@@ -321,13 +317,18 @@ git status
 cat docs/handover.md
 
 # View previous handover
-cat docs/archive/handover_20251031_034133.md
+cat docs/archive/handover_20251031_095512.md
 
 # View project rules (MUST READ)
 cat .claude/prompts/project-rules.md
 
 # View permissions config (MUST READ)
 cat .claude/settings.local.json
+
+# Test wdu.sh with new total feature
+./scripts/wdu.sh
+./scripts/wdu.sh -n 5
+./scripts/wdu.sh ~/work
 
 # Test context switching
 work
@@ -337,12 +338,6 @@ show-context
 
 # Check LaunchAgents
 launchctl list | grep befeast
-
-# View NAS setup
-cat guides/nas-auto-mount-setup.md
-
-# Check SSH keys
-ls -la ~/.ssh/id_ed25519*
 ```
 
 ---
@@ -357,11 +352,9 @@ ls -la ~/.ssh/id_ed25519*
 **Tests:** All passing
 **Blockers:** None
 
-**Last Commits:**
+**Last Commit:**
 ```
-5afa5e8 - feat: add NAS setup instructions to bootstrap and update daily notes (just now)
-dc3e9da - refactor: remove company-specific references (just now)
-7c29a23 - docs: add session handoff documentation (just now)
+9cba08f - feat: add total storage display to wdu.sh and move daily notes to archive (just now)
 ```
 
 ---
@@ -376,23 +369,24 @@ dc3e9da - refactor: remove company-specific references (just now)
 6. **INCREMENTAL PROGRESS:** Break work into small, verifiable steps
 7. **SSH KEY NAMING:** Use `id_ed25519_work` (not `id_ed25519_concur`)
 8. **LAUNCHAGENT NAMING:** Use `com.befeast.*` prefix
+9. **WDU DEPLOYMENT:** Work on repo version first, then copy to `~/work/scripts`
 
 ---
 
 ## 🔗 Related Documentation
 
-**Previous Session:** `docs/archive/handover_20251031_034133.md` - Clean install fixes
-**Daily Notes:** `2025-10-31.md` - Task tracking
+**Previous Handover:** `docs/archive/handover_20251031_095512.md` - Repository cleanup session
+**Daily Notes Archive:** `docs/archive/daily-notes-2025-10-31.md` - Archived daily notes
 **Project Rules:** `.claude/prompts/project-rules.md` - MUST READ
 **Permissions:** `.claude/settings.local.json` - MUST READ
 **Architecture:** `CLAUDE.md` - Repository overview
 
 ---
 
-**Session completed successfully at:** 2025-10-31 03:41 +0200
-**Total commits this session:** 3
-**Total changes:** 11 files modified
-**All tasks completed:** ✅ Documentation, ✅ Cleanup, ✅ NAS guide, ✅ Postman research
+**Session completed successfully at:** 2025-10-31 09:55 +0200
+**Total commits this session:** 1
+**Total changes:** 3 files modified (settings, daily notes moved, wdu.sh enhanced)
+**All tasks completed:** ✅ Root cleanup, ✅ wdu.sh enhancement, ✅ Testing, ✅ Deployment
 
 ---
 
