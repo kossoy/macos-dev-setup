@@ -188,6 +188,13 @@ EOF
     echo "  AI/ML:      ./setup-helpers/09-install-ai-ml-tools.sh"
     echo ""
 
+    print_status "Optional NAS auto-mount setup:"
+    echo "  1. Store credentials: ~/work/scripts/setup-nas-keychain.sh"
+    echo "  2. Test mounting:     nas-mount"
+    echo "  3. Enable auto-mount: nas-enable"
+    echo "  4. Documentation:     guides/nas-auto-mount-setup.md"
+    echo ""
+
     print_status "Next steps:"
     echo "  1. Configure API keys: ~/.config/zsh/private/api-keys.zsh"
     echo "  2. Run full bootstrap for Git/SSH/context setup"
