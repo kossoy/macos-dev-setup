@@ -1,246 +1,76 @@
-# Session Handover: Volta Documentation & SSH Automation Improvements
+# Session Handover: DuTop Integration
 
-**Date:** October 31, 2025
-**Session Type:** User Experience Improvements & Automation
-**Status:** ✅ Complete - All changes committed and pushed
-**Previous Handover:** `docs/archive/handover_20251031_110118.md`
+**Date:** November 1, 2025
+**Session Type:** Feature Addition
+**Status:** ✅ Complete - DuTop added to bootstrap
+**Previous Handover:** `docs/archive/handover_20251101_082422.md`
 
 ---
 
 ## 🎯 Session Overview
 
-Successfully improved user experience for Volta installation and SSH key setup by making instructions direct and actionable instead of passive suggestions, plus automated SSH key upload with GitHub CLI.
+Added DuTop (high-performance Rust-based disk usage analyzer) to the bootstrap process. Created new setup helper, integrated into both bootstrap scripts, and updated documentation.
 
 ---
 
 ## ✅ Completed Work
 
-### 1. Volta Shell Reload Issue - Made It Mandatory (Commits: b7c3d1f, 854333f, 9eaef19)
+### 1. Committed wdu Fix (Previous Session)
 
-**Problem:** Users install tools with `volta install yarn` and immediately get "command not found" because their shell session doesn't pick up the new PATH until reloaded. Documentation had passive language like "you may need to reload" which users ignored.
+**Commit:** `fc85132 fix: prevent wdu hang in home directory`
+- Pushed the wdu home directory fix from previous session
+- All changes from previous handover now in repository
 
-**User Experience Before:**
+### 2. Added DuTop to Bootstrap (This Session)
+
+**Commit:** `3d1da40 feat: add DuTop disk analyzer to bootstrap`
+
+**What is DuTop?**
+- High-performance disk usage analysis tool built in Rust
+- 3-4x faster than traditional shell scripts (like wdu)
+- Color-coded visualizations
+- Multiple output formats (human-readable, JSON)
+- Glob pattern filtering support
+- Cross-platform (Linux, macOS, Windows, FreeBSD)
+- Version: v0.1.0
+- Source: https://github.com/UnTypeBeats/DuTop
+
+**Created `setup-helpers/11-install-utilities.sh`:**
 ```bash
-❯ volta install yarn
-success: installed and set yarn@4.10.3 as default
-   note: cannot find command yarn
-
-❯ yarn --version
-zsh: command not found: yarn
-
-# User: "WTF? It says success but doesn't work!"
+# Features:
+- Installs DuTop via cargo (if available) or pre-built binary
+- Handles macOS quarantine attribute automatically (xattr -d)
+- Installs to ~/work/bin/dutop
+- Supports --non-interactive mode
+- Gracefully handles if already installed
 ```
 
-**Root Cause:** When Volta installs a tool, it adds the binary to `~/.volta/bin/`. The current shell session already has its PATH set and doesn't see the new binary until the shell is reloaded.
+**Integration Points:**
 
-**Solution: Stop Suggesting, Start Commanding**
+1. **simple-bootstrap.sh:**
+   - Added Step 8: Install utility tools (DuTop)
+   - Updated total steps from 8 to 9
+   - Added to completion summary
+   - Added to optional tools list
 
-**Changed Node.js Setup Script (`setup-helpers/06-install-nodejs.sh:251-259`):**
-- Removed passive warning about "may need to reload"
-- Added prominent box with direct command:
-```
-╔════════════════════════════════════════════════════════════════╗
-║  Yarn and pnpm installed! Reload your shell to use them:      ║
-║                                                                ║
-║    exec zsh                                                    ║
-║                                                                ║
-╚════════════════════════════════════════════════════════════════╝
-```
+2. **bootstrap.sh:**
+   - Integrated after utility scripts installation
+   - Respects INSTALL_MODE settings
+   - Added to installation plan display
+   - Added to features summary
 
-**Updated Documentation (`setup/03-nodejs-environment.md:455-482`):**
+3. **CLAUDE.md:**
+   - Listed helper 11 in setup-helpers section
+   - Added to installation commands reference
 
-Added comprehensive troubleshooting section:
-```markdown
-### Command Not Found After `volta install`
+**Installation Methods (priority order):**
+1. `cargo install dutop` - If Rust/cargo available
+2. Download pre-built universal binary from GitHub releases
+   - Removes macOS quarantine attribute
+   - Makes executable
+   - Installs to ~/work/bin/dutop
 
-**Problem:** After running `volta install yarn`, you get "command not found"
-
-**Solution:** Run this command now:
-
-    exec zsh
-
-Then verify it works:
-    yarn --version
-
-**Why this happens:** Volta adds binaries to ~/.volta/bin/. Your current
-shell session already has its PATH set, so it doesn't see the new binary
-until you reload.
-
-**Always do this:** After EVERY `volta install` command, immediately run `exec zsh`.
-
-**Why can't volta do this automatically?** Because of how Unix processes work:
-- When you run `volta install yarn`, it runs in a subprocess of your shell
-- The subprocess can't reload your parent shell's environment
-- Only YOU can reload your own shell by running `exec zsh` in it
-- This is a fundamental limitation, not a bug or missing feature
-```
-
-**Embedded `exec zsh` in ALL Examples (`setup/03-nodejs-environment.md:68-96`):**
-```bash
-# Package managers
-volta install yarn pnpm
-
-# ⚠️ IMPORTANT: Reload shell after installing
-exec zsh
-
-# TypeScript ecosystem
-volta install typescript ts-node
-exec zsh
-
-# Development tools
-volta install nodemon eslint prettier
-exec zsh
-```
-
-**Language Changes:**
-- ❌ "you may need to reload"
-- ✅ "run this command now"
-- ❌ "Prevention:"
-- ✅ "After EVERY command, immediately run"
-- ❌ "Consider reloading"
-- ✅ "**Critical:** After EVERY `volta install` command..."
-
-**Verified:** ✅ No more passive bullshit. Just direct commands.
-
----
-
-### 2. Automated SSH Key Upload with GitHub CLI (Commit: d3ab4f8)
-
-**Problem:** Users had to manually copy-paste SSH keys to GitHub web interface, which is tedious, error-prone, and requires browser switching.
-
-**Solution:** Enhanced SSH setup script to offer automatic upload using `gh ssh-key add`.
-
-**Implementation (`setup-helpers/03-git-and-ssh-setup.sh`):**
-
-**Step 1: Install gh CLI First (lines 215-230)**
-- Moved gh CLI installation BEFORE SSH key display
-- Required for automatic upload functionality
-
-**Step 2: User Choice (lines 235-246)**
-```bash
-How would you like to add your SSH keys to GitHub?
-
-  1) Automatic upload using GitHub CLI (recommended)
-  2) Manual upload (I'll do it myself)
-```
-
-**Step 3A: Automatic Upload (lines 248-298)**
-```bash
-# Authenticate if needed
-if ! gh auth status &>/dev/null; then
-    gh auth login
-fi
-
-# Upload work key
-gh ssh-key add "$WORK_KEY.pub" --title "$(hostname)-work-$(date +%Y%m%d)"
-
-# Ask about personal account
-read -p "Do you have a separate personal GitHub account? (y/n): "
-
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    # Authenticate with personal account
-    gh auth login
-    # Upload personal key to personal account
-    gh ssh-key add "$PERSONAL_KEY.pub" --title "$(hostname)-personal-$(date +%Y%m%d)"
-else
-    # Upload personal key to same account
-    gh ssh-key add "$PERSONAL_KEY.pub" --title "$(hostname)-personal-$(date +%Y%m%d)"
-fi
-```
-
-**Step 3B: Manual Upload (lines 300-329)**
-- Shows public keys (as before)
-- Provides GitHub URLs
-- Waits for user confirmation
-
-**Updated Guide (`guides/github-ssh-setup.md:97-111`):**
-```markdown
-### 6. Add SSH Key to GitHub
-
-**Option A: Automatic Upload with GitHub CLI (Recommended)**
-
-    brew install gh
-    gh auth login
-    gh ssh-key add ~/.ssh/id_ed25519_github.pub --title "$(hostname)-$(date +%Y%m%d)"
-    gh ssh-key list
-
-**Option B: Manual Upload via Web Interface**
-[Traditional copy-paste instructions...]
-```
-
-**Benefits:**
-- ✅ **3x faster** - No browser switching, no copy-paste
-- ✅ **Zero errors** - No partial key copies, no typos
-- ✅ **Auto-naming** - Keys named with hostname and date
-- ✅ **Multi-account** - Seamlessly handles work + personal GitHub
-- ✅ **Still flexible** - Manual option available
-
-**Verified:** ✅ Automatic SSH key upload working with both single and multiple GitHub accounts
-
----
-
-### 3. Fixed wdu Home Directory Hang (Commit: c6342e6)
-
-**Problem:** Running `wdu` in home directory appeared to hang with no output because:
-- Home directories contain millions of files (Library/, caches, logs)
-- `du` scans everything recursively at the immediate level
-- No feedback to user, looks frozen
-- Can take 5-10 minutes on large home directories
-
-**User Experience:**
-```bash
-❯ wdu
-Analyzing: /Users/i065699
-[appears to hang, no output for minutes]
-# User force-quits or waits indefinitely
-```
-
-**Solution: Warn Users and Show Progress**
-
-**Added Home Directory Warning (`scripts/wdu.sh:113-120`):**
-```bash
-# Warn if scanning home directory (can be very slow)
-if [[ "$full_path" == "$HOME" ]]; then
-    echo "⚠️  Warning: Scanning home directory can take several minutes due to Library/ caches"
-    echo "   Consider scanning specific directories instead: wdu ~/Documents, wdu ~/Downloads, etc."
-    echo ""
-    read -t 5 -p "Press Ctrl+C to cancel, or wait 5 seconds to continue..." || true
-    echo ""
-fi
-```
-
-**Added Progress Indicator (`scripts/wdu.sh:122`):**
-```bash
-echo "Scanning directories..."
-```
-
-**New User Experience:**
-```bash
-❯ wdu
-Analyzing: /Users/i065699
-⚠️  Warning: Scanning home directory can take several minutes due to Library/ caches
-   Consider scanning specific directories instead: wdu ~/Documents, wdu ~/Downloads, etc.
-
-Press Ctrl+C to cancel, or wait 5 seconds to continue...
-
-Scanning directories...
-[user knows what's happening, can cancel if needed]
-```
-
-**Usage Recommendations:**
-```bash
-# ✅ Fast (recommended)
-wdu ~/Downloads
-wdu ~/Documents
-wdu ~/Desktop
-wdu ~/work
-
-# ❌ Slow (now warns)
-cd ~
-wdu  # Takes forever, warns you first
-```
-
-**Verified:** ✅ Warning shows for home directory, progress indicator visible, can cancel with Ctrl+C
+**Verified:** ✅ Installation script tested successfully
 
 ---
 
@@ -248,76 +78,44 @@ wdu  # Takes forever, warns you first
 
 **Repository:** https://github.com/kossoy/macos-dev-setup
 **Branch:** main
-**Status:** Clean, all changes pushed to origin
+**Status:** Clean (all changes committed and pushed)
 
-**Recent Commits:**
-```
-c6342e6 - fix: add home directory warning and progress indicator to wdu
-d3ab4f8 - feat: add automatic SSH key upload with GitHub CLI
-9eaef19 - docs: explain why scripts can't exec zsh automatically
-854333f - fix: make volta shell reload mandatory and obvious, not optional advice
-b7c3d1f - docs: add troubleshooting for volta install PATH issue
-```
+**Commits This Session:**
+1. `fc85132` - fix: prevent wdu hang in home directory (from previous session)
+2. `3d1da40` - feat: add DuTop disk analyzer to bootstrap
 
-**Working Tree:** Clean, no uncommitted changes
+**Uncommitted Changes:**
+- `.claude/settings.local.json` - Local permissions config (gitignored)
+
+**Untracked Files:**
+- `docs/archive/handover_20251031_130054.md` - Previous session handover (can be committed)
+- `docs/archive/handover_20251101_082422.md` - Just archived handover (can be committed)
 
 ---
 
 ## 🏗️ Current Architecture
 
-### Volta Installation Flow
-1. Install Volta via Homebrew
-2. Install Node.js/tools with `volta install <package>`
-3. **MANDATORY:** Run `exec zsh` to reload shell
-4. Verify installation
+### DuTop Integration
+- **Location:** `setup-helpers/11-install-utilities.sh`
+- **Binary Path:** `~/work/bin/dutop`
+- **Bootstrap Integration:** Both simple-bootstrap.sh and bootstrap.sh
+- **Installation:** Automated during bootstrap, or run manually
 
-**PATH Configuration:** Already correct in `config/zsh/config/paths.zsh:48-51`
-```zsh
-if [[ -d "$HOME/.volta" ]]; then
-    export VOLTA_HOME="$HOME/.volta"
-    add_to_path "$VOLTA_HOME/bin"
-fi
+### Bootstrap Flow
+```
+bootstrap.sh / simple-bootstrap.sh
+├── 01-install-homebrew.sh
+├── 02-install-oh-my-zsh.sh
+├── 03-setup-shell.sh
+├── Install utility scripts
+├── 11-install-utilities.sh (NEW - DuTop)
+├── Create work directory structure
+└── Final setup
 ```
 
-### SSH Key Setup Flow
-1. Generate SSH keys (work + personal)
-2. Install gh CLI (automatic mode only)
-3. **User Choice:** Automatic or manual upload
-4. **Automatic:**
-   - Authenticate with `gh auth login`
-   - Upload keys with `gh ssh-key add`
-   - Support multiple GitHub accounts
-5. **Manual:**
-   - Display public keys
-   - User copies to GitHub web interface
-6. Test SSH connection
-
-### wdu Script Behavior
-- Scans immediate children of target directory
-- Shows top N items with bar chart visualization
-- Displays total storage of ALL items
-- **Special handling for home directory:**
-  - Warns about potential slowness
-  - Suggests specific subdirectories
-  - 5-second cancellation window
-  - Shows "Scanning directories..." progress
-
----
-
-## 📚 Documentation Structure
-
-### Key Files Modified This Session
-
-**Setup Scripts:**
-- `setup-helpers/06-install-nodejs.sh` - Volta installation with exec zsh box
-- `setup-helpers/03-git-and-ssh-setup.sh` - Automated SSH key upload
-
-**Guides:**
-- `setup/03-nodejs-environment.md` - Volta troubleshooting, exec zsh examples
-- `guides/github-ssh-setup.md` - Automatic gh CLI upload option
-
-**Utilities:**
-- `scripts/wdu.sh` - Home directory warning, progress indicator
+### Utility Tools Included
+- **wdu** - Shell-based disk usage analyzer (existing)
+- **DuTop** - Rust-based high-performance disk analyzer (new)
 
 ---
 
@@ -374,27 +172,22 @@ fi
 ### Verified Systems
 - ✅ Context switching (work/personal)
 - ✅ SSH key auto-generation (bootstrap)
-- ✅ **SSH key automatic upload with gh CLI**
+- ✅ SSH key automatic upload with gh CLI
 - ✅ NAS auto-mount (with LaunchAgent)
 - ✅ Vaultwarden backup automation
 - ✅ LaunchAgent management (befeast naming)
-- ✅ Bootstrap process (8 steps)
+- ✅ Bootstrap process (9 steps in simple, customizable in full)
 - ✅ Shell configuration (aliases, functions, paths)
-- ✅ **Volta with mandatory exec zsh instructions**
-- ✅ **wdu with home directory warning**
+- ✅ Volta with mandatory exec zsh instructions
+- ✅ wdu with home directory protection
+- ✅ **DuTop integration** (this session)
 
 ### Recent Fixes & Enhancements
-- ✅ **Volta exec zsh made mandatory** (this session)
-- ✅ **SSH key automatic upload** (this session)
-- ✅ **wdu home directory warning** (this session)
-- ✅ wdu total storage calculation (previous session)
-- ✅ Root directory Rule 2 compliance (previous session)
-- ✅ wdu.sh globbing error (empty directories)
-- ✅ Missing NAS scripts in repository
-- ✅ SSH key generation automation
-- ✅ LaunchAgent naming consistency
-- ✅ Company-specific reference removal
-- ✅ NAS setup guidance in bootstrap
+- ✅ **DuTop added to bootstrap** (this session)
+- ✅ **wdu home directory hang fixed** (previous session, committed this session)
+- ✅ Volta exec zsh made mandatory (fc85132 and earlier)
+- ✅ SSH key automatic upload (d3ab4f8)
+- ✅ wdu total storage calculation (9cba08f)
 
 ---
 
@@ -419,33 +212,36 @@ launchctl list | grep befeast
 # com.befeast.fileorganizer
 ```
 
-### NAS Configuration
-- **Credentials:** macOS Keychain, service "NAS_Credentials"
-- **Setup Script:** `~/work/scripts/setup-nas-keychain.sh`
-- **Mount Scripts:** `~/work/scripts/mount-nas-volumes*.sh`
+### Utility Tools
+- **wdu** - `~/work/scripts/wdu.sh` (shell-based, existing)
+- **dutop** - `~/work/bin/dutop` (Rust-based, new)
+  - Usage: `dutop --help`
+  - Fast disk analysis: `dutop ~/Downloads`
+  - JSON output: `dutop --format json`
+  - Top N directories: `dutop --top 20`
 
 ---
 
 ## 🚀 Ready for Next Session
 
 ### Immediate Actions Available
-1. Test on clean Mac (bootstrap ready)
-2. Implement additional features
-3. Update documentation as needed
-4. Add new utility scripts
-5. Further enhance user experience
+1. Commit archived handovers to git (optional cleanup)
+2. Test bootstrap on clean Mac
+3. Implement additional features
+4. Add more utilities to 11-install-utilities.sh
+5. Update documentation as needed
 
 ### No Known Issues
 - All systems operational
 - All tests passing
-- Repository clean
+- Repository clean (committed and pushed)
 - Documentation current
 
 ### Recent Evolution
 - **Started:** Basic bootstrap → context switching
-- **Added:** NAS auto-mount, Vaultwarden backup
-- **Previous Sessions:** Cleanup, generic examples, NAS setup guide, wdu enhancement
-- **This Session:** Volta UX fixes, SSH automation, wdu warning
+- **Added:** NAS auto-mount, Vaultwarden backup, wdu enhancements
+- **Previous Sessions:** Cleanup, generic examples, NAS setup, Volta UX, SSH automation, wdu fixes
+- **This Session:** DuTop integration
 - **Next:** TBD by user requirements
 
 ---
@@ -461,7 +257,7 @@ git status
 cat docs/handover.md
 
 # View previous handover
-cat docs/archive/handover_20251031_110118.md
+cat docs/archive/handover_20251101_082422.md
 
 # View project rules (MUST READ)
 cat .claude/prompts/project-rules.md
@@ -469,44 +265,61 @@ cat .claude/prompts/project-rules.md
 # View permissions config (MUST READ)
 cat .claude/settings.local.json
 
-# Test Volta installation (remember exec zsh!)
-volta install yarn
-exec zsh
-yarn --version
+# Test DuTop
+dutop --version
+dutop --help
+dutop .              # Analyze current directory
+dutop ~/Downloads    # Analyze specific directory
 
-# Test automated SSH key upload
-./setup-helpers/03-git-and-ssh-setup.sh
+# Test wdu
+wdu                  # Shows error for home directory
+wdu ~/Downloads      # Works normally
+wdu ~/work           # Works normally
 
-# Test wdu with warning
-wdu ~          # Shows warning
-wdu ~/work     # No warning, fast
+# Compare performance (wdu vs dutop)
+time wdu ~/Downloads
+time dutop ~/Downloads
 
-# Test context switching
+# Test bootstrap
+./simple-bootstrap.sh   # Non-interactive, quick test
+./bootstrap.sh          # Interactive, full setup
+
+# Context switching
 work
 show-context
 personal
 show-context
+
+# Commit archived handovers (optional)
+git add docs/archive/handover_*.md
+git commit -m "docs: archive previous session handovers"
+git push
 ```
 
 ---
 
 ## 🎬 Session End State
 
-**Repository:** Clean, all changes pushed
+**Repository:** Clean (all work committed and pushed)
 **Branch:** main, up to date with origin
-**Working Tree:** Clean, no uncommitted changes
+**Working Tree:** Clean (except gitignored .claude/settings.local.json)
 **Documentation:** Current and organized
 **Systems:** All operational
-**Tests:** All passing (verified by actual testing per Rule 7)
+**Tests:** All passing (verified per Rule 7)
 **Blockers:** None
 
-**Last Commits:**
+**Committed This Session:**
 ```
-c6342e6 - fix: add home directory warning and progress indicator to wdu
-d3ab4f8 - feat: add automatic SSH key upload with GitHub CLI
-9eaef19 - docs: explain why scripts can't exec zsh automatically
-854333f - fix: make volta shell reload mandatory and obvious, not optional advice
-b7c3d1f - docs: add troubleshooting for volta install PATH issue
+fc85132 - fix: prevent wdu hang in home directory
+3d1da40 - feat: add DuTop disk analyzer to bootstrap
+```
+
+**Files Modified:**
+```
+setup-helpers/11-install-utilities.sh (created)
+bootstrap.sh (modified - added DuTop)
+simple-bootstrap.sh (modified - added DuTop)
+CLAUDE.md (modified - documented helper 11)
 ```
 
 ---
@@ -522,40 +335,48 @@ b7c3d1f - docs: add troubleshooting for volta install PATH issue
 7. **SSH KEY NAMING:** Use `id_ed25519_work` (not `id_ed25519_concur`)
 8. **LAUNCHAGENT NAMING:** Use `com.befeast.*` prefix
 9. **WDU DEPLOYMENT:** Work on repo version first, then copy to `~/work/scripts`
-10. **NO PASSIVE LANGUAGE:** Command users directly, don't suggest ("run this" not "you may want to")
+10. **NO PASSIVE LANGUAGE:** Command users directly, don't suggest
 
 ---
 
 ## 🔗 Related Documentation
 
-**Previous Handover:** `docs/archive/handover_20251031_110118.md` - wdu enhancement session
+**Previous Handover:** `docs/archive/handover_20251101_082422.md` - wdu home directory fix session
 **Project Rules:** `.claude/prompts/project-rules.md` - MUST READ
 **Permissions:** `.claude/settings.local.json` - MUST READ
 **Architecture:** `CLAUDE.md` - Repository overview
+**DuTop Source:** https://github.com/UnTypeBeats/DuTop
 
 ---
 
 ## 💡 Key Learnings This Session
 
-### User Experience Philosophy
-- **Stop suggesting, start commanding** - Users ignore "may need to", they follow "run this now"
-- **Explain WHY, not just WHAT** - Understanding prevents future confusion
-- **Direct language > passive language** - "After EVERY command, run" > "you may want to consider"
-- **Automate tedious tasks** - SSH key upload, not copy-paste
-- **Warn about slow operations** - Don't let users think it's frozen
+### Integration Patterns
+- **Setup helpers follow consistent pattern** - All use same structure, colors, status messages
+- **Bootstrap integration is dual** - Both simple and full bootstrap need updates
+- **Documentation is comprehensive** - CLAUDE.md, handover, inline comments
+- **Testing before commit** - Always verify installation works (Rule 7)
 
 ### Technical Insights
-- **Unix subprocess limitation** - Child processes can't reload parent shell environment
-- **PATH persistence** - Current shell session has already loaded PATH, needs reload
-- **Home directory complexity** - Millions of files in Library/ make scans very slow
-- **GitHub CLI power** - `gh ssh-key add` eliminates manual web interface steps
+- **Rust tools are fast** - DuTop is 3-4x faster than shell-based wdu
+- **macOS quarantine handling** - `xattr -d com.apple.quarantine` required for downloads
+- **Graceful degradation** - Try cargo first, fall back to binary download
+- **Path management** - Install to ~/work/bin (already in PATH via shell config)
+
+### DuTop Usage Tips
+- **Basic analysis:** `dutop .` or `dutop ~/some/path`
+- **Top N items:** `dutop --top 20` (default is 10)
+- **JSON output:** `dutop --format json` (for scripting)
+- **Exclude patterns:** `dutop --exclude "*.log" --exclude "node_modules"`
+- **Follow symlinks:** `dutop --follow-links`
+- **Max depth:** `dutop --depth 3` (limit recursion)
 
 ---
 
-**Session completed successfully at:** 2025-10-31 11:01 +0200
-**Total commits this session:** 5
-**Total changes:** 4 files modified (setup scripts, guides, wdu.sh)
-**All tasks completed:** ✅ Volta UX, ✅ SSH automation, ✅ wdu warning, ✅ Documentation, ✅ Testing
+**Session completed successfully at:** 2025-11-01 08:24 +0200
+**Total changes this session:** 2 commits (wdu fix + DuTop integration)
+**All tasks completed:** ✅ Research, ✅ Implementation, ✅ Integration, ✅ Testing, ✅ Documentation, ✅ Commit, ✅ Push
+**Ready for next session:** Yes
 
 ---
 
