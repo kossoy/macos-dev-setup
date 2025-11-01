@@ -54,7 +54,7 @@ check_macos() {
 
 # Main execution
 main() {
-    local total_steps=8
+    local total_steps=9
 
     print_header "🍎 macOS Fresh Setup - Simple Bootstrap"
     print_header "========================================"
@@ -144,8 +144,15 @@ EOF
     fi
     echo ""
 
-    # Step 8: Final setup
-    print_step 8 $total_steps "Finalizing setup..."
+    # Step 8: Install utility tools (DuTop)
+    print_step 8 $total_steps "Installing utility tools..."
+    bash "$SCRIPT_DIR/setup-helpers/11-install-utilities.sh" --non-interactive || {
+        print_warning "Utility tools installation encountered issues (continuing anyway)"
+    }
+    echo ""
+
+    # Step 9: Final setup
+    print_step 9 $total_steps "Finalizing setup..."
 
     # Ensure ~/.zshrc exists and sources our config
     if [[ ! -f "$HOME/.zshrc" ]] || ! grep -q "\.config/zsh" "$HOME/.zshrc"; then
@@ -168,6 +175,7 @@ EOF
     echo "  ✅ Shell configuration (aliases, functions, paths)"
     echo "  ✅ Work directory structure"
     echo "  ✅ Utility scripts"
+    echo "  ✅ Utility tools (DuTop disk analyzer)"
     echo ""
 
     print_status "To start using your new environment:"
@@ -186,6 +194,7 @@ EOF
     echo "  Docker:     ./setup-helpers/04-install-docker.sh"
     echo "  Databases:  ./setup-helpers/07-setup-databases.sh"
     echo "  AI/ML:      ./setup-helpers/09-install-ai-ml-tools.sh"
+    echo "  Utilities:  ./setup-helpers/11-install-utilities.sh (includes DuTop)"
     echo ""
 
     print_status "Optional NAS auto-mount setup:"

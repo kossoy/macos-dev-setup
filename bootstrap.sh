@@ -399,6 +399,7 @@ display_installation_plan() {
         echo "✅ Process management tools"
         echo "✅ Network utilities"
         echo "✅ File organization tools"
+        echo "✅ Utility tools (DuTop disk analyzer)"
     fi
     
     if [[ "$INSTALL_MODE" == "full" ]] || [[ "$INSTALL_WORK_DIR" == "true" ]]; then
@@ -464,7 +465,16 @@ run_installation() {
         chmod +x ~/work/scripts/*.sh ~/work/scripts/*.zsh 2>/dev/null || true
         print_success "Utility scripts installed"
     fi
-    
+
+    # Install utility tools (DuTop, etc.)
+    if [[ "$INSTALL_MODE" == "full" ]] || [[ "$INSTALL_SCRIPTS" == "true" ]]; then
+        print_status "Installing utility tools (DuTop)..."
+        bash "$SCRIPT_DIR/setup-helpers/11-install-utilities.sh" --non-interactive || {
+            print_warning "Utility tools installation encountered issues (continuing anyway)"
+        }
+        print_success "Utility tools installed"
+    fi
+
     # Create work directory structure
     if [[ "$INSTALL_MODE" == "full" ]] || [[ "$INSTALL_WORK_DIR" == "true" ]]; then
         print_status "Creating work directory structure..."

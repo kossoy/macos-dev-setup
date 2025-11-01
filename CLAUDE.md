@@ -29,6 +29,8 @@ This is a semi-automated macOS development environment setup package designed fo
 - **07-setup-databases.sh** - Docker databases
 - **08-restore-sensitive.sh** - Credential restoration helper
 - **09-install-ai-ml-tools.sh** - AI/ML tooling
+- **10-setup-ssh-keys.sh** - SSH key generation and GitHub upload
+- **11-install-utilities.sh** - Utility tools (DuTop disk analyzer)
 
 Users can run individual helpers directly: `./setup-helpers/05-install-python.sh --mode=ai-ml`
 
@@ -106,6 +108,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kossoy/macos-dev-setup/main/
 ./setup-helpers/07-setup-databases.sh
 ./setup-helpers/08-restore-sensitive.sh
 ./setup-helpers/09-install-ai-ml-tools.sh
+./setup-helpers/10-setup-ssh-keys.sh
+./setup-helpers/11-install-utilities.sh
 ```
 
 ### Context Management
