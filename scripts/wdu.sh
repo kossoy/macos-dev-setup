@@ -110,13 +110,26 @@ main() {
     local full_path=$(pwd)
     echo "Analyzing: $full_path"
 
-    # Warn if scanning home directory (can be very slow)
+    # Refuse to scan home directory (too slow due to Library/ caches)
     if [[ "$full_path" == "$HOME" ]]; then
-        echo "⚠️  Warning: Scanning home directory can take several minutes due to Library/ caches"
-        echo "   Consider scanning specific directories instead: wdu ~/Documents, wdu ~/Downloads, etc."
         echo ""
-        read -t 5 -p "Press Ctrl+C to cancel, or wait 5 seconds to continue..." || true
+        echo "⚠️  Cannot scan home directory (too slow due to Library/ caches)"
         echo ""
+        echo "Showing quick summary of common directories instead:"
+        echo ""
+
+        # Show quick du -sh for common directories
+        local dirs=("Documents" "Downloads" "Desktop" "Pictures" "Movies" "Music" "work" "projects")
+        for dir in "${dirs[@]}"; do
+            if [[ -d "$HOME/$dir" ]]; then
+                local size=$(command du -sh "$HOME/$dir" 2>/dev/null | awk '{print $1}')
+                printf "  %-12s %s\n" "$size" "~/$dir"
+            fi
+        done
+
+        echo ""
+        echo "To analyze a specific directory, run: wdu ~/Documents (or any other path)"
+        return 0
     fi
 
     echo "Scanning directories..."
