@@ -2,7 +2,7 @@
 # =============================================================================
 # Python Environment Installation Script
 # =============================================================================
-# Installs pyenv and Python with multiple installation modes
+# Installs uv (fast Python package installer and version manager)
 # =============================================================================
 
 set -e
@@ -58,9 +58,9 @@ for arg in "$@"; do
             echo "  --help              Show this help message"
             echo ""
             echo "Modes:"
-            echo "  minimal    - pyenv only"
-            echo "  standard   - pyenv + Python 3.11 (default)"
-            echo "  full       - pyenv + Python 3.10, 3.11, 3.12"
+            echo "  minimal    - uv only"
+            echo "  standard   - uv + Python 3.11 (default)"
+            echo "  full       - uv + Python 3.10, 3.11, 3.12"
             echo "  ai-ml      - full + AI/ML packages"
             exit 0
             ;;
@@ -80,56 +80,53 @@ if ! command -v brew &>/dev/null; then
     exit 1
 fi
 
-# Install pyenv
-print_status "Installing pyenv..."
-if command -v pyenv &>/dev/null; then
-    print_success "pyenv already installed"
-    pyenv --version
+# Install uv
+print_status "Installing uv (fast Python package installer)..."
+if command -v uv &>/dev/null; then
+    print_success "uv already installed"
+    uv --version
 else
-    print_status "Installing pyenv via Homebrew..."
-    if brew install pyenv; then
-        print_success "pyenv installed"
+    print_status "Installing uv via Homebrew..."
+    if brew install uv; then
+        print_success "uv installed"
+        uv --version
     else
-        print_error "Failed to install pyenv"
+        print_error "Failed to install uv"
         exit 1
     fi
 fi
 
-# Configure shell for pyenv
+# Configure PATH for uv
 print_status "Configuring shell environment..."
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+export PATH="$HOME/.local/bin:$PATH"
 
-# Add to shell config if not already there
+# Add to shell config if not already there (uv binary location)
 if [[ -f "$HOME/.zshrc" ]]; then
-    if ! grep -q "PYENV_ROOT" "$HOME/.zshrc"; then
-        print_status "Adding pyenv to ~/.zshrc..."
+    if ! grep -q "\.local/bin" "$HOME/.zshrc" 2>/dev/null; then
+        print_status "Adding uv to PATH in ~/.zshrc..."
         cat >> "$HOME/.zshrc" << 'EOF'
 
-# pyenv configuration
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+# uv configuration
+export PATH="$HOME/.local/bin:$PATH"
 EOF
-        print_success "pyenv added to ~/.zshrc"
+        print_success "uv added to ~/.zshrc"
     else
-        print_success "pyenv already configured in ~/.zshrc"
+        print_success "uv path already configured in ~/.zshrc"
     fi
 fi
 
 # Mode-specific installation
 case "$MODE" in
     minimal)
-        print_success "Minimal installation complete (pyenv only)"
+        print_success "Minimal installation complete (uv only)"
         ;;
 
     standard)
-        print_status "Installing Python 3.11..."
-        if pyenv versions | grep -q "3.11"; then
+        print_status "Installing Python 3.11 with uv..."
+        if uv python list 2>/dev/null | grep -q "3.11"; then
             print_success "Python 3.11 already installed"
         else
-            if pyenv install 3.11; then
+            if uv python install 3.11; then
                 print_success "Python 3.11 installed"
             else
                 print_error "Failed to install Python 3.11"
@@ -137,109 +134,99 @@ case "$MODE" in
             fi
         fi
 
-        print_status "Setting Python 3.11 as global default..."
-        pyenv global 3.11
-        print_success "Python 3.11 set as global"
-
-        # Upgrade pip
-        print_status "Upgrading pip..."
-        python -m pip install --upgrade pip setuptools wheel
-        print_success "pip upgraded"
+        print_status "Setting Python 3.11 as default..."
+        uv python pin 3.11
+        print_success "Python 3.11 set as default"
         ;;
 
     full)
-        print_status "Installing multiple Python versions..."
+        print_status "Installing multiple Python versions with uv..."
 
         # Install Python 3.10
-        if pyenv versions | grep -q "3.10"; then
+        if uv python list 2>/dev/null | grep -q "3.10"; then
             print_success "Python 3.10 already installed"
         else
             print_status "Installing Python 3.10..."
-            pyenv install 3.10 || print_warning "Failed to install Python 3.10"
+            uv python install 3.10 || print_warning "Failed to install Python 3.10"
         fi
 
         # Install Python 3.11
-        if pyenv versions | grep -q "3.11"; then
+        if uv python list 2>/dev/null | grep -q "3.11"; then
             print_success "Python 3.11 already installed"
         else
             print_status "Installing Python 3.11..."
-            pyenv install 3.11 || print_error "Failed to install Python 3.11" && exit 1
+            uv python install 3.11 || { print_error "Failed to install Python 3.11"; exit 1; }
         fi
 
         # Install Python 3.12
-        if pyenv versions | grep -q "3.12"; then
+        if uv python list 2>/dev/null | grep -q "3.12"; then
             print_success "Python 3.12 already installed"
         else
             print_status "Installing Python 3.12..."
-            pyenv install 3.12 || print_warning "Failed to install Python 3.12"
+            uv python install 3.12 || print_warning "Failed to install Python 3.12"
         fi
 
-        print_status "Setting Python 3.11 as global default..."
-        pyenv global 3.11
-        print_success "Python 3.11 set as global"
-
-        # Upgrade pip
-        print_status "Upgrading pip..."
-        python -m pip install --upgrade pip setuptools wheel
-        print_success "pip upgraded"
+        print_status "Setting Python 3.11 as default..."
+        uv python pin 3.11
+        print_success "Python 3.11 set as default"
         ;;
 
     ai-ml)
         print_status "Installing Python versions for AI/ML..."
 
         # Install Python 3.11 (recommended for AI/ML)
-        if pyenv versions | grep -q "3.11"; then
+        if uv python list 2>/dev/null | grep -q "3.11"; then
             print_success "Python 3.11 already installed"
         else
             print_status "Installing Python 3.11..."
-            pyenv install 3.11 || { print_error "Failed to install Python 3.11"; exit 1; }
+            uv python install 3.11 || { print_error "Failed to install Python 3.11"; exit 1; }
         fi
 
         # Install Python 3.12
-        if pyenv versions | grep -q "3.12"; then
+        if uv python list 2>/dev/null | grep -q "3.12"; then
             print_success "Python 3.12 already installed"
         else
             print_status "Installing Python 3.12..."
-            pyenv install 3.12 || print_warning "Failed to install Python 3.12"
+            uv python install 3.12 || print_warning "Failed to install Python 3.12"
         fi
 
-        print_status "Setting Python 3.11 as global default..."
-        pyenv global 3.11
-        print_success "Python 3.11 set as global"
+        print_status "Setting Python 3.11 as default..."
+        uv python pin 3.11
+        print_success "Python 3.11 set as default"
 
         # Create AI virtual environment
-        print_status "Creating AI virtual environment..."
+        print_status "Creating AI virtual environment with uv..."
         mkdir -p ~/.venvs
 
         if [[ -d ~/.venvs/ai ]]; then
             print_success "AI virtual environment already exists"
         else
-            python -m venv ~/.venvs/ai
+            uv venv ~/.venvs/ai --python 3.11
             print_success "AI virtual environment created"
         fi
 
-        # Activate and install AI/ML packages
-        print_status "Installing AI/ML packages (this may take several minutes)..."
-        source ~/.venvs/ai/bin/activate
-
-        # Upgrade pip
-        python -m pip install --upgrade pip setuptools wheel
+        # Install AI/ML packages using uv pip
+        print_status "Installing AI/ML packages with uv (this will be fast!)..."
 
         # Core AI libraries
         print_status "Installing core AI libraries..."
-        pip install openai anthropic langchain langchain-openai langchain-anthropic python-dotenv requests
+        uv pip install --python ~/.venvs/ai/bin/python \
+            openai anthropic langchain langchain-openai langchain-anthropic python-dotenv requests
 
         # Jupyter
         print_status "Installing Jupyter..."
-        pip install jupyter ipython notebook jupyterlab
+        uv pip install --python ~/.venvs/ai/bin/python \
+            jupyter ipython notebook jupyterlab
 
         # Data science packages
         print_status "Installing data science packages..."
-        pip install numpy pandas matplotlib seaborn scikit-learn
+        uv pip install --python ~/.venvs/ai/bin/python \
+            numpy pandas matplotlib seaborn scikit-learn
 
         # Web frameworks
         print_status "Installing web frameworks..."
-        pip install flask fastapi uvicorn
+        uv pip install --python ~/.venvs/ai/bin/python \
+            flask fastapi uvicorn
 
         # ML frameworks (optional, large downloads)
         if ! $NON_INTERACTIVE; then
@@ -247,14 +234,15 @@ case "$MODE" in
             echo ""
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 print_status "Installing PyTorch..."
-                pip install torch torchvision torchaudio || print_warning "Failed to install PyTorch"
+                uv pip install --python ~/.venvs/ai/bin/python \
+                    torch torchvision torchaudio || print_warning "Failed to install PyTorch"
 
                 print_status "Installing TensorFlow..."
-                pip install tensorflow || print_warning "Failed to install TensorFlow"
+                uv pip install --python ~/.venvs/ai/bin/python \
+                    tensorflow || print_warning "Failed to install TensorFlow"
             fi
         fi
 
-        deactivate
         print_success "AI/ML environment configured"
         ;;
 
@@ -267,9 +255,9 @@ esac
 
 # Verify installation
 print_status "Verifying Python installation..."
-python --version
-pip --version
-print_success "Python environment ready"
+if uv python list 2>/dev/null | head -1; then
+    print_success "Python environment ready"
+fi
 
 echo ""
 print_success "Python installation complete!"
@@ -277,20 +265,18 @@ echo ""
 print_status "Installed:"
 case "$MODE" in
     minimal)
-        echo "  ✅ pyenv"
+        echo "  ✅ uv (fast Python package installer)"
         ;;
     standard)
-        echo "  ✅ pyenv"
+        echo "  ✅ uv (fast Python package installer)"
         echo "  ✅ Python 3.11"
-        echo "  ✅ pip, setuptools, wheel"
         ;;
     full)
-        echo "  ✅ pyenv"
+        echo "  ✅ uv (fast Python package installer)"
         echo "  ✅ Python 3.10, 3.11, 3.12"
-        echo "  ✅ pip, setuptools, wheel"
         ;;
     ai-ml)
-        echo "  ✅ pyenv"
+        echo "  ✅ uv (fast Python package installer)"
         echo "  ✅ Python 3.11, 3.12"
         echo "  ✅ AI virtual environment (~/.venvs/ai)"
         echo "  ✅ AI/ML libraries (openai, anthropic, langchain, etc.)"
@@ -311,7 +297,8 @@ case "$MODE" in
         print_status "Python version management:"
         ;;
 esac
-echo "  List versions: pyenv versions"
-echo "  Install version: pyenv install 3.X.X"
-echo "  Switch version: pyenv global 3.X.X"
-echo "  Local version: pyenv local 3.X.X"
+echo "  List versions: uv python list"
+echo "  Install version: uv python install 3.X.X"
+echo "  Pin version (for project): uv python pin 3.X.X"
+echo "  Create venv: uv venv"
+echo "  Install packages: uv pip install <package>"

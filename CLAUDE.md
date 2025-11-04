@@ -24,7 +24,7 @@ This is a semi-automated macOS development environment setup package designed fo
 - **02-install-oh-my-zsh.sh** - Shell framework with plugins
 - **03-setup-shell.sh** - Shell configuration deployment
 - **04-install-docker.sh** - Docker Desktop setup
-- **05-install-python.sh** - Python + pyenv (supports --mode=ai-ml)
+- **05-install-python.sh** - Python + uv (fast package manager, supports --mode=ai-ml)
 - **06-install-nodejs.sh** - Node.js + Volta
 - **07-setup-databases.sh** - Docker databases
 - **08-restore-sensitive.sh** - Credential restoration helper

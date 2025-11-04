@@ -41,7 +41,7 @@ After basic setup, install additional tools as needed:
 # Docker Desktop
 ./setup-helpers/04-install-docker.sh
 
-# Python environment (pyenv + Python)
+# Python environment (uv + Python - fast!)
 ./setup-helpers/05-install-python.sh         # Standard mode
 ./setup-helpers/05-install-python.sh --mode=ai-ml  # With AI/ML packages
 
