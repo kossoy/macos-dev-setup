@@ -1,6 +1,6 @@
 # Python Development Environment
 
-Complete Python setup with pyenv for version management and essential packages for web development and AI/ML.
+Complete Python setup with uv - a fast Python package installer and version manager written in Rust by Astral.
 
 ## Prerequisites
 
@@ -8,83 +8,82 @@ Complete Python setup with pyenv for version management and essential packages f
 - Homebrew installed
 - Xcode Command Line Tools installed
 
-## 1. Pyenv (Python Version Management)
+## 1. uv (Fast Python Package Installer & Version Manager)
 
-Pyenv allows you to easily switch between multiple versions of Python.
+uv is an extremely fast Python package installer and resolver, serving as a drop-in replacement for pip, pip-tools, and virtualenv. It's 10-100x faster than pip and also manages Python versions.
 
 ```bash
-# Install pyenv
-brew install pyenv
-
-# Add to shell configuration
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
-echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
-echo 'eval "$(pyenv init -)"' >> ~/.zshrc
-
-# Reload shell
-source ~/.zshrc
-
-# Install latest Python versions
-pyenv install 3.11.7
-pyenv install 3.12.1
-pyenv global 3.12.1
+# Install uv
+brew install uv
 
 # Verify installation
-python --version
-pip --version
+uv --version
+
+# Install Python versions
+uv python install 3.11
+uv python install 3.12
+
+# Pin Python version for your project
+uv python pin 3.12
+
+# List installed Python versions
+uv python list
 ```
 
 ## 2. Essential Python Packages
 
-### Package Managers & Virtual Environments
+### Using uv for Package Management
+
+uv provides fast package installation with better dependency resolution:
 
 ```bash
-# Upgrade pip
-pip install --upgrade pip
+# Create a new virtual environment
+uv venv
 
-# Install package managers
-pip install pipenv poetry virtualenv
+# Activate the environment
+source .venv/bin/activate
+
+# Install packages (much faster than pip!)
+uv pip install <package-name>
 ```
 
 ### Development Tools
 
 ```bash
 # Code quality and testing
-pip install black flake8 mypy pytest pytest-cov
+uv pip install black flake8 mypy pytest pytest-cov ruff
 ```
 
 ### AI/ML Packages
 
 ```bash
 # Core data science libraries
-pip install numpy pandas matplotlib seaborn scikit-learn
+uv pip install numpy pandas matplotlib seaborn scikit-learn
 
 # Deep learning frameworks
-pip install tensorflow torch
+uv pip install tensorflow torch
 
 # Jupyter for notebooks
-pip install jupyter jupyterlab
+uv pip install jupyter jupyterlab
 ```
 
 ### Web Development
 
 ```bash
 # Web frameworks
-pip install django flask fastapi
+uv pip install django flask fastapi
 
 # HTTP and web scraping
-pip install requests beautifulsoup4
+uv pip install requests beautifulsoup4
 ```
 
 ### All-in-One Installation
 
 ```bash
-# Install all essential packages at once
-pip install \
-  pipenv poetry virtualenv \
-  black flake8 mypy pytest pytest-cov \
+# Install all essential packages at once (blazingly fast with uv!)
+uv pip install \
+  black flake8 mypy pytest pytest-cov ruff \
   numpy pandas matplotlib seaborn scikit-learn \
-  tensorflow torch \
   jupyter jupyterlab \
   django flask fastapi \
   requests beautifulsoup4
@@ -96,10 +95,10 @@ Jupyter provides an interactive computing environment.
 
 ```bash
 # Install Jupyter Lab
-pip install jupyterlab
+uv pip install jupyterlab
 
 # Install Jupyter extensions
-pip install jupyter-contrib-nbextensions
+uv pip install jupyter-contrib-nbextensions
 
 # Generate configuration
 jupyter lab --generate-config
@@ -110,38 +109,37 @@ jupyter lab
 
 ## 4. Virtual Environment Best Practices
 
-### Using venv (Built-in)
+### Using uv (Recommended - Fast!)
 
 ```bash
-# Create virtual environment
-python -m venv myproject-env
+# Create virtual environment with uv (much faster than venv)
+uv venv
 
 # Activate
-source myproject-env/bin/activate
+source .venv/bin/activate
+
+# Install packages
+uv pip install requests numpy pandas
+
+# Install from requirements.txt
+uv pip install -r requirements.txt
+
+# Sync environment to match requirements.txt exactly
+uv pip sync requirements.txt
+
+# Compile requirements with pinned versions
+uv pip compile requirements.in -o requirements.txt
 
 # Deactivate
 deactivate
 ```
 
-### Using pipenv
+### Using poetry (Alternative)
 
 ```bash
-# Install dependencies from Pipfile
-pipenv install
+# Install poetry
+brew install poetry
 
-# Activate environment
-pipenv shell
-
-# Install package
-pipenv install requests
-
-# Install dev dependencies
-pipenv install --dev pytest
-```
-
-### Using poetry
-
-```bash
 # Create new project
 poetry new myproject
 
@@ -241,25 +239,48 @@ pycharm ~/work/projects/personal/my-python-project
 
 ## 7. Common Commands
 
-```bash
-# Check Python version
-python --version
+### Python Version Management with uv
 
+```bash
+# List installed Python versions
+uv python list
+
+# Install a Python version
+uv python install 3.12
+
+# Pin Python version for project
+uv python pin 3.11
+
+# Find Python installations
+uv python find 3.12
+```
+
+### Package Management with uv
+
+```bash
 # List installed packages
-pip list
+uv pip list
 
 # Show package info
-pip show <package-name>
+uv pip show <package-name>
 
-# Update all packages
-pip list --outdated
-pip install --upgrade <package-name>
+# List outdated packages
+uv pip list --outdated
+
+# Install/upgrade package
+uv pip install --upgrade <package-name>
 
 # Freeze dependencies
-pip freeze > requirements.txt
+uv pip freeze > requirements.txt
 
 # Install from requirements
-pip install -r requirements.txt
+uv pip install -r requirements.txt
+
+# Sync to exact requirements (removes unlisted packages)
+uv pip sync requirements.txt
+
+# Compile requirements with locked versions
+uv pip compile requirements.in -o requirements.txt
 ```
 
 ## 8. Troubleshooting
@@ -268,34 +289,39 @@ pip install -r requirements.txt
 
 ```bash
 # Update certificates
-pip install --upgrade certifi
+uv pip install --upgrade certifi
 ```
 
 ### M1 Mac Compatibility
 
-Some packages may need special installation:
+uv handles M1 compatibility automatically:
 
 ```bash
-# For TensorFlow on M1
-pip install tensorflow-macos tensorflow-metal
+# For TensorFlow on M1 (uv handles the right version)
+uv pip install tensorflow-macos tensorflow-metal
 
 # For PyTorch on M1 (automatic detection)
-pip install torch torchvision torchaudio
+uv pip install torch torchvision torchaudio
 ```
 
 ### Permission Errors
 
-Never use `sudo pip install`. Instead:
+Always use virtual environments with uv (no permission issues):
 
 ```bash
-# Use --user flag
-pip install --user <package-name>
-
-# Or use virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate
-pip install <package-name>
+# Create and activate virtual environment (recommended)
+uv venv
+source .venv/bin/activate
+uv pip install <package-name>
 ```
+
+### Speed and Performance
+
+uv is 10-100x faster than pip due to:
+- Written in Rust (native performance)
+- Parallel downloads and installs
+- Better dependency resolution algorithm
+- Smart caching
 
 ## Next Steps
 
