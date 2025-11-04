@@ -173,6 +173,7 @@ Complete step-by-step setup instructions for your development environment:
 Specific configuration and usage guides:
 
 #### General Development
+- **[uv Python Guide](guides/uv-python-guide.md)** - **NEW!** Complete guide to using uv (10-100x faster than pip) - replaces pip, pip-tools, virtualenv, and pyenv
 - **[Obsidian Setup](guides/obsidian-setup.md)** - Install and configure Obsidian for documentation
 - **[Obsidian Vault Git Sync](guides/obsidian-vault-git-sync.md)** - **NEW!** Sync this vault across devices using Obsidian Git plugin
 - **[Obsidian GitHub Sync](guides/obsidian-github-sync.md)** - Sync your Obsidian vaults across devices via GitHub
@@ -237,7 +238,7 @@ Quick reference materials:
 Follow the self-contained setup guides in order:
 
 1. **[System Setup](setup/01-system-setup.md)** - macOS, Homebrew, shell
-2. **[Python Environment](setup/02-python-environment.md)** - Python, pyenv, packages
+2. **[Python Environment](setup/02-python-environment.md)** - Python, uv (fast package manager), packages
 3. **[Node.js Environment](setup/03-nodejs-environment.md)** - Volta, Node, npm
 4. **[Java Environment](setup/04-java-environment.md)** - SDKMAN, Java, Maven, Gradle
 5. **[Docker & Kubernetes](setup/05-docker-kubernetes.md)** - Containers & orchestration
